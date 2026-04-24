@@ -115,21 +115,6 @@ h3 {
   flex-direction: column;
   gap: 20px;
 }
-
-/* SEARCH */
-.search {
-  width: 100%;
-  padding: 12px 20px;
-  border-radius: 999px;
-  border: none;
-  outline: none;
-  background: linear-gradient(135deg, #dcdde6, #7ca6ca);
-  
-}
-.search::placeholder {
-  color: #0a1529;
-  font-size: 15px; 
-}
 /* TIME */
 .time-pill {
   width: fit-content;
@@ -200,7 +185,7 @@ h3 {
 
 
 /* LIGHT REFLECTION */
-.card::before,
+.card::before,/*قبل محتوای کارت یه لایه نامرئی بسازیم*/
 .card-box::before,
 .quick-links::before,
 .support::before {
@@ -214,7 +199,7 @@ h3 {
     transparent 60%
   );
   opacity: 0.15;
-  pointer-events: none;
+  pointer-events: none;/*کارتی که ساختیم به موس واکنش نده*/
 }
 
 /* HOVER */
@@ -276,7 +261,7 @@ h3 {
 }
 
 .links {
-  display: grid;
+  display: grid;/*سه ستونه کردن کوییک لینکس*/
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
 }
@@ -363,7 +348,7 @@ h3 {
 
 .support-row:hover {
   background: rgba(255,255,255,0.15);
-  transform: scale(1.02);
+  transform: scale(1.02);/*بزرگ کردن عنصر*/
 }
 
 .support h3 {
@@ -455,7 +440,7 @@ h3 {
 .menu p {
   position: relative;
 }
-.menu p:not(:last-child)::after {
+.menu p:not(:last-child)::after {/*خط جدا کننده زیر همه بجز اخری*/
   content: "";
   position: absolute;
   bottom: -10px;

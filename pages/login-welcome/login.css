@@ -7,7 +7,7 @@
 
 /* BACKGROUND */
 body {
-  height: 100vh;
+  height: 100vh; /*وسط واقعی صفحه*/
 
   background: linear-gradient(
     to top,
@@ -15,7 +15,7 @@ body {
     #1c3883    
   );
 
-  display: flex;
+  display: flex; /*سنتر کردن با فلکس*/
   justify-content: center;
   align-items: center;
 }
@@ -30,12 +30,12 @@ body {
 
   box-shadow: 
     0 20px 60px rgba(78, 76, 196, 0.5),   /* سایه اصلی */
-    0 0 40px rgba(107, 125, 161, 0.15); /* glow آبی ملایم */
+    0 0 40px rgba(107, 125, 161, 0.15); /*  نور دورشglow آبی ملایم */
 
   transition: 0.3s;
 }
 .login-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px); /*عنصر 5 پیکسل بره بالا*/
   box-shadow: 
     0 30px 80px rgba(0,0,0,0.6),
     0 0 60px rgba(59,130,246,0.25);
@@ -43,12 +43,12 @@ body {
 
 /* TABS */
 .tabs {
-  position: relative;
+  position: relative; /*خودش سرجاش بمونه ولی بچه هاش به این بچسبن*/
   display: flex;
   background: #e5e7eb;
   border-radius: 999px;
   margin-bottom: 25px;
-  overflow: hidden;
+  overflow: hidden; /*که indicator از کادر نزنه بیرون و UI تمیز بمونه*/
 }
 
 .tab {
@@ -66,7 +66,7 @@ body {
   border: none;
   background: transparent;
   cursor: pointer;
-  z-index: 2;
+  z-index: 2; /*یه هایلایت که زیر تبه بگه کدوم تب فعاله*/
   font-weight: 500;
   transition: 0.2s;
 }
@@ -83,7 +83,7 @@ body {
 
 /* BLUE INDICATOR */
 .indicator {
-  position: absolute;
+  position: absolute; /*بچه ای که طبق بالا حرکت میکنه*/
   width: 50%;
   height: 100%;
   background:#18386d;
@@ -104,7 +104,7 @@ h2 {
 }
 /* INPUTS */
 input[type="email"],
-input[type="password"] {
+input[type="password"] {/*سلکتور گروهی*/
   width: 100%;
   padding: 12px;
   margin-bottom: 15px;
@@ -181,7 +181,7 @@ input[type="password"] {
 .social img {
   width: 20px;
   height: 20px;
-  object-fit: contain;
+  object-fit: contain; /*جلوگیری از کشیدگی تصویر*/
 }
 .logo {
   position: absolute;
@@ -189,9 +189,15 @@ input[type="password"] {
   left: 20px;
   width: 100px;   
   opacity: 0.9;
-filter: brightness(0) invert(1)
+filter: brightness(0) invert(1) /*سفید کردن لوگو*/
    drop-shadow(0 0 5px rgba(143,179,255,0.5));
 }
 .logo path {
   fill: white;
+}
+#errorMsg {
+  color: #ff4d4d;
+  font-size: 13px;
+  margin-bottom: 10px;
+  text-align: center;
 }

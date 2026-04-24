@@ -21,13 +21,14 @@
       </div>
 
       <h2>Welcome Back</h2>
-     <form action="welcome.html">
-      <input type="email" placeholder="Email" required>
-      <input type="password" placeholder="Password" required minlength="4">
+     <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required minlength="4">
+      <p id="errorMsg"></p>
 
       <div class="options">
         <label>
-          <input type="checkbox"> Remember me
+          <input type="checkbox" id="remember"> Remember me
         </label>
         <a href="#">Forgot password?</a>
       </div>
@@ -41,6 +42,7 @@
     </div>
 
   </div>
+  <script src="login.js"></script>
 
 </body>
 </html>
