@@ -2,9 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import '../styles/dashboard.css';
 import '../styles/statistics.css';
-import { useAuth } from '../auth';
 import { fetchTickets } from '../utils/tickets';
-import { StackedBarTrendChart, SLAPerformanceChart } from '../components/Charts';
+import { ServiceTypeChart, SLAPerformanceChart, StackedBarTrendChart } from '../components/Charts';
 
 const CHARTS = [
   {
@@ -15,7 +14,12 @@ const CHARTS = [
   {
     id: 'sla',
     label: 'SLA Performance',
-    note: 'Resolution rate per week — within SLA vs. out of SLA.',
+    note: 'Real SLA state by week: within SLA, missed SLA, active, and overdue.',
+  },
+  {
+    id: 'service',
+    label: 'Service Types',
+    note: 'Ticket volume grouped by service type.',
   },
 ];
 
@@ -30,8 +34,25 @@ function getWeekKey(dateStr) {
   return `W${weekNum}\n${d.getFullYear()}`;
 }
 
+function getTicketSlaState(ticket) {
+  const deadline = ticket.slaDeadline ? new Date(ticket.slaDeadline) : null;
+  const hasValidDeadline = deadline && !Number.isNaN(deadline.getTime());
+  const isCompleted = ticket.status === 'Resolved' || ticket.status === 'Closed';
+
+  if (!hasValidDeadline) {
+    return isCompleted ? 'within' : 'active';
+  }
+
+  if (isCompleted) {
+    if (!ticket.closeDate) return 'within';
+    const closeDateEnd = new Date(`${ticket.closeDate}T23:59:59`);
+    return closeDateEnd <= deadline ? 'within' : 'missed';
+  }
+
+  return Date.now() > deadline.getTime() ? 'overdue' : 'active';
+}
+
 export default function StatisticsPage() {
-  const { } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState('');
   const [activeChart, setActiveChart] = useState('kpi');
@@ -61,13 +82,27 @@ export default function StatisticsPage() {
           total: 0,
           values: { Critical: 0, High: 0, Medium: 0, Low: 0 },
           statusValues: { Open: 0, 'In Progress': 0, Pending: 0, Resolved: 0, Closed: 0 },
+          slaValues: { within: 0, missed: 0, active: 0, overdue: 0 },
         };
       }
       weeks[key].total++;
       if (weeks[key].values[t.priority] !== undefined) weeks[key].values[t.priority]++;
       if (weeks[key].statusValues[t.status] !== undefined) weeks[key].statusValues[t.status]++;
+      weeks[key].slaValues[getTicketSlaState(t)]++;
     });
     return Object.values(weeks).sort((a, b) => a.label.localeCompare(b.label));
+  }, [tickets]);
+
+  const serviceData = useMemo(() => {
+    const services = {};
+    tickets.forEach((ticket) => {
+      const serviceType = ticket.serviceType || 'Unknown';
+      services[serviceType] = (services[serviceType] || 0) + 1;
+    });
+
+    return Object.entries(services)
+      .map(([label, total]) => ({ label, total }))
+      .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label));
   }, [tickets]);
 
   const activeChartMeta = CHARTS.find((c) => c.id === activeChart);
@@ -87,6 +122,7 @@ export default function StatisticsPage() {
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
             <NavLink to="/statistics">Statistics</NavLink>
+            <NavLink to="/users">Users</NavLink>
           </nav>
 
           <div className="statistics-sidebar-status">
@@ -101,7 +137,7 @@ export default function StatisticsPage() {
         <main className="statistics-main">
           <section className="statistics-hero">
             <div className="statistics-hero-copy">
-              <p className="statistics-kicker">Nokia · Romania</p>
+              <p className="statistics-kicker">Nokia - Romania</p>
               <h1 className="statistics-title">Statistics</h1>
               <p className="statistics-subtitle">
                 Visual breakdowns of incident volume, priority distribution, and SLA performance over time.
@@ -137,6 +173,7 @@ export default function StatisticsPage() {
               <div className="statistics-chart-body">
                 {activeChart === 'kpi' && <StackedBarTrendChart groups={weeklyData} />}
                 {activeChart === 'sla' && <SLAPerformanceChart groups={weeklyData} />}
+                {activeChart === 'service' && <ServiceTypeChart groups={serviceData} />}
               </div>
             )}
           </section>

@@ -771,6 +771,15 @@ tbody td {
   font-weight: 850;
 }
 
+.ticket-detail-link {
+  color: white;
+  text-decoration: none;
+}
+
+.ticket-detail-link:hover {
+  color: #8fb3ff;
+}
+
 .description-cell {
   max-width: 360px;
   color: #dbdcd6;

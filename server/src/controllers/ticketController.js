@@ -66,9 +66,144 @@ function getCloseDateForStatus(nextStatus, currentStatus, requestedCloseDate, cu
   return null;
 }
 
+function stringifyHistoryValue(value) {
+  if (value === null || value === undefined || value === '') return '-';
+  return String(value);
+}
+
+async function addHistoryEntry(ticketId, userId, action, fieldName = null, oldValue = null, newValue = null) {
+  await query(
+    `INSERT INTO ticket_history (ticket_id, user_id, action, field_name, old_value, new_value)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      ticketId,
+      userId,
+      action,
+      fieldName,
+      stringifyHistoryValue(oldValue),
+      stringifyHistoryValue(newValue),
+    ]
+  );
+}
+
+async function addChangedFieldHistory(ticketId, userId, changes) {
+  for (const change of changes) {
+    if (stringifyHistoryValue(change.oldValue) !== stringifyHistoryValue(change.newValue)) {
+      await addHistoryEntry(ticketId, userId, 'updated', change.fieldName, change.oldValue, change.newValue);
+    }
+  }
+}
+
+function mapHistoryRow(row) {
+  return {
+    id: row.id,
+    ticketId: row.ticket_id,
+    action: row.action,
+    fieldName: row.field_name,
+    oldValue: row.old_value,
+    newValue: row.new_value,
+    userName: row.user_name || 'Unknown user',
+    createdAt: row.created_at,
+  };
+}
+
+function mapCommentRow(row) {
+  return {
+    id: row.id,
+    ticketId: row.ticket_id,
+    commentText: row.comment_text,
+    userName: row.user_name || 'Unknown user',
+    createdAt: row.created_at,
+  };
+}
+
 export async function getTickets(req, res) {
   const tickets = await fetchAllTickets();
   return res.json(tickets);
+}
+
+export async function getTicket(req, res) {
+  const ticket = await findTicketRow(req.params.id);
+
+  if (!ticket) {
+    return res.status(404).json({ message: 'Ticket not found.' });
+  }
+
+  return res.json(mapTicketRow(ticket));
+}
+
+export async function getTicketHistory(req, res) {
+  const ticket = await findTicketRow(req.params.id);
+
+  if (!ticket) {
+    return res.status(404).json({ message: 'Ticket not found.' });
+  }
+
+  const result = await query(
+    `SELECT
+       h.id,
+       h.ticket_id,
+       h.action,
+       h.field_name,
+       h.old_value,
+       h.new_value,
+       h.created_at,
+       u.name AS user_name
+     FROM ticket_history h
+     LEFT JOIN users u ON u.id = h.user_id
+     WHERE h.ticket_id = $1
+     ORDER BY h.created_at DESC, h.id DESC`,
+    [req.params.id]
+  );
+
+  return res.json(result.rows.map(mapHistoryRow));
+}
+
+export async function getTicketComments(req, res) {
+  const ticket = await findTicketRow(req.params.id);
+
+  if (!ticket) {
+    return res.status(404).json({ message: 'Ticket not found.' });
+  }
+
+  const result = await query(
+    `SELECT
+       c.id,
+       c.ticket_id,
+       c.comment_text,
+       c.created_at,
+       u.name AS user_name
+     FROM ticket_comments c
+     LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.ticket_id = $1
+     ORDER BY c.created_at ASC, c.id ASC`,
+    [req.params.id]
+  );
+
+  return res.json(result.rows.map(mapCommentRow));
+}
+
+export async function addTicketComment(req, res) {
+  const ticket = await findTicketRow(req.params.id);
+  const commentText = req.body.commentText?.trim();
+
+  if (!ticket) {
+    return res.status(404).json({ message: 'Ticket not found.' });
+  }
+
+  if (!commentText) {
+    return res.status(400).json({ message: 'Comment text is required.' });
+  }
+
+  await query(
+    `INSERT INTO ticket_comments (ticket_id, user_id, comment_text)
+     VALUES ($1, $2, $3)`,
+    [req.params.id, req.user.id, commentText]
+  );
+
+  await addHistoryEntry(req.params.id, req.user.id, 'commented', 'comment', null, commentText);
+
+  return getTicketComments(req, res);
 }
 
 export async function createTicket(req, res) {
@@ -150,6 +285,7 @@ export async function createTicket(req, res) {
   );
 
   void result;
+  await addHistoryEntry(id, req.user.id, 'created', 'ticket', null, id);
   return res.status(201).json(await fetchAllTickets());
 }
 
@@ -185,6 +321,12 @@ export async function updateTicket(req, res) {
        WHERE id = $4`,
       [nextStatus, req.body.aging ?? currentTicket.aging, closeDateValue, ticketId]
     );
+
+    await addChangedFieldHistory(ticketId, req.user.id, [
+      { fieldName: 'Status', oldValue: currentTicket.status, newValue: nextStatus },
+      { fieldName: 'Aging', oldValue: currentTicket.aging, newValue: req.body.aging ?? currentTicket.aging },
+      { fieldName: 'Close Date', oldValue: currentTicket.close_date, newValue: closeDateValue },
+    ]);
 
     return res.json(await fetchAllTickets());
   }
@@ -247,6 +389,25 @@ export async function updateTicket(req, res) {
       ticketId,
     ]
   );
+
+  await addChangedFieldHistory(ticketId, req.user.id, [
+    { fieldName: 'Description', oldValue: currentTicket.description, newValue: req.body.description },
+    { fieldName: 'Status', oldValue: currentTicket.status, newValue: req.body.status },
+    { fieldName: 'Priority', oldValue: currentTicket.priority, newValue: req.body.priority },
+    { fieldName: 'Assigned Group', oldValue: currentTicket.assigned_group, newValue: req.body.assignedGroup },
+    { fieldName: 'Service Type', oldValue: currentTicket.service_type, newValue: req.body.serviceType },
+    { fieldName: 'Submit Date', oldValue: currentTicket.submit_date, newValue: req.body.submitDate },
+    { fieldName: 'Close Date', oldValue: currentTicket.close_date, newValue: closeDateValue },
+    { fieldName: 'Company', oldValue: currentTicket.company, newValue: req.body.company || currentTicket.company },
+    { fieldName: 'Product Categorization Tier 1', oldValue: currentTicket.product_categorization_tier1, newValue: req.body.productCategorizationTier1 || currentTicket.product_categorization_tier1 },
+    { fieldName: 'Product Categorization Tier 2', oldValue: currentTicket.product_categorization_tier2, newValue: req.body.productCategorizationTier2 || currentTicket.product_categorization_tier2 },
+    { fieldName: 'Product Categorization Tier 3', oldValue: currentTicket.product_categorization_tier3, newValue: req.body.productCategorizationTier3 || currentTicket.product_categorization_tier3 },
+    { fieldName: 'Categorization Tier 1', oldValue: currentTicket.categorization_tier1, newValue: req.body.categorizationTier1 || currentTicket.categorization_tier1 },
+    { fieldName: 'SLA Type', oldValue: currentTicket.sla_type, newValue: slaTypeValue },
+    { fieldName: 'SLA Hours', oldValue: currentTicket.sla_hours, newValue: slaHoursValue },
+    { fieldName: 'Assigned Person', oldValue: currentTicket.assigned_person_user_id, newValue: req.body.assignedPersonUserId || null },
+    { fieldName: 'Aging', oldValue: currentTicket.aging, newValue: req.body.aging ?? currentTicket.aging },
+  ]);
 
   return res.json(await fetchAllTickets());
 }

@@ -64,7 +64,7 @@ export default function WelcomePage() {
               <QuickCard to="/tickets" icon="/assets/login-welcome/Images/ticket.svg" label="Ticket" />
               <QuickCard icon="/assets/login-welcome/Images/report.svg" label="Reports" />
               <QuickCard icon="/assets/login-welcome/Images/analytics.svg" label="Analytics" />
-              <QuickCard icon="/assets/login-welcome/Images/user.svg" label="Users" />
+              <QuickCard to="/users" icon="/assets/login-welcome/Images/user.svg" label="Users" />
               <QuickCard icon="/assets/login-welcome/Images/setting.svg" label="Settings" />
             </div>
           </div>

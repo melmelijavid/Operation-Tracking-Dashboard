@@ -298,6 +298,15 @@
   line-height: 1.05;
 }
 
+.ticket-card h3 a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.ticket-card h3 a:hover {
+  color: #8fb3ff;
+}
+
 .ticket-badges {
   display: flex;
   flex-direction: column;
@@ -409,6 +418,7 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .card-action,
@@ -447,6 +457,12 @@
   color: #ffd2d6;
   border-color: rgba(255, 77, 90, 0.32);
   background: rgba(255, 77, 90, 0.12);
+}
+
+.card-detail-link {
+  color: #0a1529;
+  background: #8fb3ff;
+  text-decoration: none;
 }
 
 .empty-grid-state {

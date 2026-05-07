@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import '../styles/ticket-management.css';
 import { AUTH_ROLES, useAuth } from '../auth';
 import { createTicket, deleteTicket, fetchTickets, updateTicket } from '../utils/tickets';
@@ -140,8 +140,9 @@ export default function TicketManagementPage() {
 
   const myTickets = useMemo(() => {
     if (!canUseManagement) return [];
+    if (role === AUTH_ROLES.ADMIN) return allTickets;
     return allTickets.filter((ticket) => matchesCurrentUser(ticket.Owner, user));
-  }, [allTickets, canUseManagement, user]);
+  }, [allTickets, canUseManagement, role, user]);
 
   const assignedTickets = useMemo(() => {
     if (!canUseManagement) return [];
@@ -334,6 +335,7 @@ function openDeleteModal(ticket) {
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
             <NavLink to="/statistics">Statistics</NavLink>
+            <NavLink to="/users">Users</NavLink>
           </nav>
 
           <div className="sidebar-divider"></div>
@@ -409,7 +411,7 @@ function openDeleteModal(ticket) {
                   <div className="ticket-card-top">
                     <div>
                       <p className="ticket-card-label">{ticket.id}</p>
-                      <h3>{ticket.serviceType}</h3>
+                      <h3><Link to={`/tickets/${encodeURIComponent(ticket.id)}`}>{ticket.serviceType}</Link></h3>
                     </div>
                     <div className="ticket-badges">
                       <span className={`status-pill ${getStatusClass(ticket.status)}`}>{ticket.status}</span>
@@ -431,6 +433,9 @@ function openDeleteModal(ticket) {
                   </dl>
 
                   <div className="ticket-card-footer">
+                    <Link className="card-action card-detail-link" to={`/tickets/${encodeURIComponent(ticket.id)}`}>
+                      Details
+                    </Link>
                     {canEditMyTickets && activeTab === 'my' && (
                       <>
                         <button type="button" className="card-action card-action-secondary" onClick={() => openDeleteModal(ticket)}>

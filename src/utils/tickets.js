@@ -5,6 +5,25 @@ export async function fetchTickets() {
   return apiRequest('/tickets');
 }
 
+export async function fetchTicket(ticketId) {
+  return apiRequest(`/tickets/${encodeURIComponent(ticketId)}`);
+}
+
+export async function fetchTicketHistory(ticketId) {
+  return apiRequest(`/tickets/${encodeURIComponent(ticketId)}/history`);
+}
+
+export async function fetchTicketComments(ticketId) {
+  return apiRequest(`/tickets/${encodeURIComponent(ticketId)}/comments`);
+}
+
+export async function addTicketComment(ticketId, commentText) {
+  return apiRequest(`/tickets/${encodeURIComponent(ticketId)}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ commentText }),
+  });
+}
+
 export async function createTicket(ticket) {
   return apiRequest('/tickets', {
     method: 'POST',

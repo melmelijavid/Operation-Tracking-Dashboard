@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import '../styles/dashboard.css';
 import { useAuth } from '../auth';
 import { fetchTickets, getDashboardTicketsForRole } from '../utils/tickets';
@@ -96,6 +96,7 @@ export default function DashboardPage() {
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
             <NavLink to="/statistics">Statistics</NavLink>
+            <NavLink to="/users">Users</NavLink>
           </nav>
 
           <div className="sidebar-status">
@@ -185,7 +186,7 @@ export default function DashboardPage() {
                 <tbody>
                   {filteredTickets.map((ticket) => (
                     <tr className={getTicketRowClass(ticket)} key={ticket.id}>
-                      <td className="ticket-id">{ticket.id}</td>
+                      <td className="ticket-id"><Link className="ticket-detail-link" to={`/tickets/${encodeURIComponent(ticket.id)}`}>{ticket.id}</Link></td>
                       <td className="description-cell">{ticket.description}</td>
                       <td><span className={`sla-badge sla-${ticket.slaUrgency || 'none'}`}>{displayValue(ticket.slaRemainingLabel)}</span></td>
                       <td><span className={`status-badge ${getStatusClass(ticket.status)}`}>{ticket.status}</span></td>

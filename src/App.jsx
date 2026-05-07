@@ -5,6 +5,8 @@ import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
 import TicketManagementPage from './pages/TicketManagementPage';
 import StatisticsPage from './pages/StatisticsPage';
+import TicketDetailPage from './pages/TicketDetailPage';
+import UsersPage from './pages/UsersPage';
 import { ProtectedRoute, PublicOnlyRoute } from './auth';
 
 export default function App() {
@@ -19,7 +21,9 @@ export default function App() {
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/tickets" element={<TicketManagementPage />} />
+        <Route path="/tickets/:id" element={<TicketDetailPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
+        <Route path="/users" element={<UsersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
