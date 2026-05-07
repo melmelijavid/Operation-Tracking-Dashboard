@@ -20,6 +20,14 @@ function getPriorityClass(priority) {
   return 'dot-low';
 }
 
+function getTicketRowClass(ticket) {
+  if (ticket.status === 'Closed' || ticket.status === 'Resolved') {
+    return 'ticket-row-completed';
+  }
+
+  return `sla-row sla-row-${ticket.slaUrgency || 'none'}`;
+}
+
 function getWeekKey(dateStr) {
   if (!dateStr) return null;
   const d = new Date(`${dateStr}T12:00:00`);
@@ -29,6 +37,17 @@ function getWeekKey(dateStr) {
   const jan1 = new Date(d.getFullYear(), 0, 1);
   const weekNum = Math.ceil(((d - jan1) / 86400000 + 1) / 7);
   return `W${weekNum}\n${d.getFullYear()}`;
+}
+
+function displayValue(value) {
+  return value || '-';
+}
+
+function formatDate(value) {
+  if (!value) return '-';
+  const [year, month, day] = String(value).slice(0, 10).split('-');
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
 }
 
 export default function DashboardPage() {
@@ -158,7 +177,7 @@ export default function DashboardPage() {
             <div className="section-top incidents-top">
               <div className="incident-title-group">
                 <h2 className="section-title">Incidents</h2>
-                <p className="section-note">Data loaded from tickets.json.</p>
+                <p className="section-note">Data loaded from backend API.</p>
                 <div className="toolbar-left">
                   <button className="btn btn-toggle" type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((current) => !current)}>
                     Filters
@@ -195,20 +214,47 @@ export default function DashboardPage() {
                 <div className="table-wrapper">
                   <table>
                     <thead>
-                      <tr><th>Incident</th><th>Description</th><th>Status</th><th>Priority</th><th>Assigned Group</th><th>Owner</th><th>Assigned Person</th><th>Service Type</th><th>Submit Date</th><th>Aging</th></tr>
+                      <tr>
+                        <th>Incident</th>
+                        <th>Description</th>
+                        <th>SLA Remaining</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Assigned Group</th>
+                        <th>Owner</th>
+                        <th>Assigned Person</th>
+                        <th>Company</th>
+                        <th>Product Categorization Tier 1</th>
+                        <th>Product Categorization Tier 2</th>
+                        <th>Product Categorization Tier 3</th>
+                        <th>Categorization Tier 1</th>
+                        <th>Service Type</th>
+                        <th>Submit Date</th>
+                        <th>Last Modified Date</th>
+                        <th>Close Date</th>
+                        <th>Aging</th>
+                      </tr>
                     </thead>
                     <tbody>
                       {filteredTickets.map((ticket) => (
-                        <tr key={ticket.id}>
+                        <tr className={getTicketRowClass(ticket)} key={ticket.id}>
                           <td className="ticket-id">{ticket.id}</td>
                           <td className="description-cell">{ticket.description}</td>
+                          <td><span className={`sla-badge sla-${ticket.slaUrgency || 'none'}`}>{displayValue(ticket.slaRemainingLabel)}</span></td>
                           <td><span className={`status-badge ${getStatusClass(ticket.status)}`}>{ticket.status}</span></td>
                           <td><span className={`priority-pill ${getPriorityClass(ticket.priority)}`}><span className={`priority-dot ${getPriorityClass(ticket.priority)}`}></span>{ticket.priority}</span></td>
                           <td>{ticket.assignedGroup}</td>
                           <td>{ticket.Owner}</td>
                           <td>{ticket.Assigned_Person}</td>
+                          <td>{displayValue(ticket.company)}</td>
+                          <td>{displayValue(ticket.productCategorizationTier1)}</td>
+                          <td>{displayValue(ticket.productCategorizationTier2)}</td>
+                          <td>{displayValue(ticket.productCategorizationTier3)}</td>
+                          <td>{displayValue(ticket.categorizationTier1)}</td>
                           <td><span className="service-chip">{ticket.serviceType}</span></td>
-                          <td>{ticket.submitDate}</td>
+                          <td>{formatDate(ticket.submitDate)}</td>
+                          <td>{formatDate(ticket.lastModifiedDate)}</td>
+                          <td>{formatDate(ticket.closeDate)}</td>
                           <td className="aging-cell">{ticket.aging} days</td>
                         </tr>
                       ))}

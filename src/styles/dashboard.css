@@ -700,7 +700,7 @@
 
 table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 2240px;
   border-collapse: collapse;
 }
 
@@ -729,6 +729,33 @@ tbody tr:nth-child(even) {
 
 tbody tr:hover {
   background: rgba(143, 179, 255, 0.1);
+}
+
+tbody tr.sla-row-warning td {
+  animation: sla-row-warning-pulse 2.2s ease-in-out infinite;
+}
+
+tbody tr.sla-row-danger td {
+  animation: sla-row-danger-pulse 0.85s ease-in-out infinite;
+}
+
+tbody tr.sla-row-overdue td {
+  color: #fff4f4;
+  background: #05070b;
+}
+
+tbody tr.sla-row-overdue:hover td {
+  background: #0b0d12;
+}
+
+tbody tr.ticket-row-completed td {
+  color: #eefdf2;
+  background: rgba(34, 197, 94, 0.1);
+  border-bottom-color: rgba(74, 222, 128, 0.18);
+}
+
+tbody tr.ticket-row-completed:hover td {
+  background: rgba(34, 197, 94, 0.16);
 }
 
 tbody td {
@@ -852,6 +879,56 @@ tbody td {
   color: #eeeeea;
   background: rgba(255, 255, 255, 0.075);
   border-color: rgba(255, 255, 255, 0.14);
+}
+
+.sla-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: #f7f7f2;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.sla-completed {
+  color: #d4ffd9;
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.32);
+}
+
+.sla-warning {
+  color: #0a1529;
+  background: #ffd166;
+  border-color: rgba(255, 209, 102, 0.72);
+}
+
+.sla-danger {
+  color: #ffffff;
+  background: #ef4444;
+  border-color: rgba(239, 68, 68, 0.8);
+}
+
+.sla-overdue {
+  color: #ffffff;
+  background: #7f1d1d;
+  border-color: #ef4444;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  text-transform: uppercase;
+}
+
+@keyframes sla-row-warning-pulse {
+  0%, 100% { background: rgba(255, 209, 102, 0.08); }
+  50% { background: rgba(255, 209, 102, 0.28); }
+}
+
+@keyframes sla-row-danger-pulse {
+  0%, 100% { background: rgba(239, 68, 68, 0.1); }
+  50% { background: rgba(239, 68, 68, 0.34); }
 }
 
 .aging-cell {
