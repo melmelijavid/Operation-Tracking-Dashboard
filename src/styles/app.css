@@ -1,13 +1,202 @@
-:root { color-scheme: dark; }
-* { box-sizing: border-box; }
-html, body, #root { min-height: 100%; margin: 0; }
-body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-a { color: inherit; text-decoration: none; }
-button, input, select { font: inherit; }
-.home-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: linear-gradient(180deg, #061226, #020617); color: white; }
-.home-card { width: min(860px, 100%); padding: 36px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 20px 60px rgba(0,0,0,0.28); backdrop-filter: blur(14px); }
-.home-kicker { color: #7dd3fc; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; font-size: 12px; }
-.home-card h1 { margin: 10px 0 14px; font-size: clamp(32px, 5vw, 52px); line-height: 1.05; max-width: 720px; }
-.home-card p { color: #cbd5e1; line-height: 1.7; max-width: 720px; }
-.home-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
-.home-link { padding: 12px 16px; border-radius: 8px; background: #eff6ff; color: #0f172a; font-weight: 700; border: 0; cursor: pointer; }
+/* PAGE */
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(
+    to top,
+    #020617,
+    #1c3883
+  );
+
+  padding-top: 15px;
+  position: relative;
+}
+
+/* LOGO */
+.logo {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  width: 110px;
+  opacity: 0.9;
+
+  filter: brightness(0) invert(1)
+    drop-shadow(0 0 8px rgba(143,179,255,0.5));
+}
+
+/* CARD */
+.home-card {
+  width: 100%;
+  max-width: 440px; 
+  background: #e2ecf0;
+  padding: 45px 40px;
+  border-radius: 24px;
+
+  box-shadow:  
+    0 20px 60px rgba(78, 76, 196, 0.5),   /* سایه اصلی */
+    0 0 40px rgba(107, 125, 161, 0.15); /*  نور دورشglow آبی ملایم */
+
+  transition: 0.3s;
+
+  transition: 0.3s;
+}
+
+.home-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 
+    0 30px 80px rgba(0,0,0,0.6),
+    0 0 60px rgba(59,130,246,0.25);
+}
+
+/* KICKER */
+.home-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+/* TITLE */
+.home-card h1 {
+  font-size: 23px;
+  margin-bottom: 16px;
+  color: #07215e;
+}
+
+/* TEXT */
+.home-card p {
+  font-size: 17px;
+  color: #181a3f;
+  line-height: 1.7;
+}
+
+/* BUTTON AREA */
+.home-links {
+  margin-top: 25px;
+   display: flex;
+  justify-content: center;
+    margin-top: 30px;
+  }
+ .home-link {
+  text-decoration: none;
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 999px;
+ justify-content: center;
+  background: linear-gradient(135deg, #0a205c, #152e57);
+  color: white;
+  font-weight: 500;
+
+  text-decoration: none; 
+  border: none;
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 25px rgba(25, 50, 92, 0.4);
+}
+.home-title {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+
+.home-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.home-link:hover {
+  transform: translateY(-2px) scale(1.05); 
+  box-shadow: 0 12px 35px rgba(59,130,246,0.5);
+  background: linear-gradient(135deg, #0b1431, #2563eb);
+}
+.logo {
+  position: absolute;
+  top: -1px;
+  left: 20px;
+  width: 100px;
+
+  /* سفید کردن SVG */
+  filter: brightness(0) invert(1);
+
+  opacity: 0.9;
+
+  filter: brightness(0) invert(1)
+    drop-shadow(0 0 6px rgba(143,179,255,0.4));
+
+  transition: 0.3s;
+}
+
+.analytics-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  opacity: 0.25;
+  filter: blur(1.4px);
+}
+
+.analytics-bg svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* محور */
+.axis {
+  stroke: #38bdf8 ;
+  stroke-width: 1;
+  opacity: 0.2;
+}
+
+/* bar */
+.bar {
+  fill: #38bdf8;
+  opacity: 0.15;
+}
+
+/* خط */
+.chart-line {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 3;
+
+  filter: drop-shadow(0 0 8px rgba(56,189,248,0.5));
+
+  stroke-dasharray: 1600;
+  stroke-dashoffset: 1600;
+  animation: drawLine 6s ease-in-out infinite;
+}
+
+/* 👇 انیمیشن ultra smooth */
+@keyframes drawLine {
+  0% {
+    stroke-dashoffset: 1600;
+  }
+  50% {
+    stroke-dashoffset: 0;
+  }
+  70% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 1600;
+  }
+}
+
+/* کارت */
+.home-card {
+  position: relative;
+  z-index: 2;
+}
+
+/* parent */
+.home-page {
+  position: relative;
+}
