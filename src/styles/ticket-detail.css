@@ -127,6 +127,32 @@
   padding: 22px;
 }
 
+.history-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.history-panel .history-list {
+  max-height: 330px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.history-panel .history-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.history-panel .history-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.history-panel .history-list::-webkit-scrollbar-thumb {
+  background: rgba(143, 179, 255, 0.45);
+  border-radius: 8px;
+}
+
 .detail-section-heading {
   display: flex;
   align-items: center;

@@ -157,9 +157,9 @@ export function SLAPerformanceChart({ groups }) {
 
   const enriched = groups.map((g) => {
     const slaValues = g.slaValues || { within: 0, missed: 0, active: 0, overdue: 0 };
-    const completed = slaValues.within + slaValues.missed;
-    const slaRate = completed > 0 ? Math.round((slaValues.within / completed) * 100) : 0;
-    return { ...g, slaValues, slaRate, completed };
+    const measuredTickets = slaValues.within + slaValues.missed + slaValues.active + slaValues.overdue;
+    const slaRate = measuredTickets > 0 ? Math.round((slaValues.within / measuredTickets) * 100) : 0;
+    return { ...g, slaValues, slaRate, measuredTickets };
   });
 
   const W = 820;
@@ -252,7 +252,7 @@ export function SLAPerformanceChart({ groups }) {
             <span>{SLA_LABELS[key]}</span>
           </div>
         ))}
-        <div className="nk-legend-item"><span className="nk-legend-line" /><span>SLA % for completed tickets</span></div>
+        <div className="nk-legend-item"><span className="nk-legend-line" /><span>Within SLA % of all weekly tickets</span></div>
       </div>
     </div>
   );

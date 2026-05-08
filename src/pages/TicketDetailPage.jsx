@@ -221,7 +221,7 @@ export default function TicketDetailPage() {
               </dl>
             </div>
 
-            <div className="ticket-detail-panel">
+            <div className="ticket-detail-panel history-panel">
               <div className="detail-section-heading">
                 <h2>History</h2>
               </div>
