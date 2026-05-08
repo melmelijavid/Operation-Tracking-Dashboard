@@ -126,8 +126,7 @@ export default function StatisticsPage() {
             <NavLink to="/welcome">Welcome</NavLink>
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Statistics</NavLink>
-            <NavLink to="/users">Users</NavLink>
+            <NavLink to="/statistics">Analytics</NavLink>
           </nav>
 
           <div className="statistics-sidebar-status">
@@ -143,7 +142,7 @@ export default function StatisticsPage() {
           <section className="statistics-hero">
             <div className="statistics-hero-copy">
               <p className="statistics-kicker">Nokia - Romania</p>
-              <h1 className="statistics-title">Statistics</h1>
+              <h1 className="statistics-title">Analytics</h1>
               <p className="statistics-subtitle">
                 Visual breakdowns of incident volume, priority distribution, and SLA performance over time.
               </p>

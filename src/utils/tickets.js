@@ -24,6 +24,12 @@ export async function addTicketComment(ticketId, commentText) {
   });
 }
 
+export async function deleteTicketComment(ticketId, commentId) {
+  return apiRequest(`/tickets/${encodeURIComponent(ticketId)}/comments/${encodeURIComponent(commentId)}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function createTicket(ticket) {
   return apiRequest('/tickets', {
     method: 'POST',

@@ -38,7 +38,7 @@ export default function WelcomePage() {
             <p><img src="/assets/login-welcome/Images/project.png" className="icon" alt="" />Projects</p>
             <p><img src="/assets/login-welcome/Images/activiry.png" className="icon" alt="" />Activity</p>
             <p><img src="/assets/login-welcome/Images/insight.png" className="icon" alt="" />Insights</p>
-            <p><img src="/assets/login-welcome/Images/statistics.png" className="icon" alt="" />Statistics</p>
+            <p><img src="/assets/login-welcome/Images/statistics.png" className="icon" alt="" />Analytics</p>
             <p><img src="/assets/login-welcome/Images/notif.png" className="icon" alt="" />Notifications</p>
             <div className="theme-mini">
               <img src="/assets/login-welcome/Images/moon.png" alt="moon" />
@@ -63,7 +63,7 @@ export default function WelcomePage() {
               <QuickCard to="/dashboard" icon="/assets/login-welcome/Images/dashboard.png" label="Dashboard" />
               <QuickCard to="/tickets" icon="/assets/login-welcome/Images/ticket.svg" label="Ticket" />
               <QuickCard icon="/assets/login-welcome/Images/report.svg" label="Reports" />
-              <QuickCard icon="/assets/login-welcome/Images/analytics.svg" label="Analytics" />
+              <QuickCard to="/statistics" icon="/assets/login-welcome/Images/analytics.svg" label="Analytics" />
               <QuickCard to="/users" icon="/assets/login-welcome/Images/user.svg" label="Users" />
               <QuickCard icon="/assets/login-welcome/Images/setting.svg" label="Settings" />
             </div>

@@ -113,6 +113,7 @@ function mapCommentRow(row) {
     id: row.id,
     ticketId: row.ticket_id,
     commentText: row.comment_text,
+    userId: row.user_id,
     userName: row.user_name || 'Unknown user',
     createdAt: row.created_at,
   };
@@ -172,6 +173,7 @@ export async function getTicketComments(req, res) {
        c.id,
        c.ticket_id,
        c.comment_text,
+       c.user_id,
        c.created_at,
        u.name AS user_name
      FROM ticket_comments c
@@ -203,6 +205,35 @@ export async function addTicketComment(req, res) {
   );
 
   await addHistoryEntry(req.params.id, req.user.id, 'commented', 'comment', null, commentText);
+
+  return getTicketComments(req, res);
+}
+
+export async function deleteTicketComment(req, res) {
+  const ticket = await findTicketRow(req.params.id);
+
+  if (!ticket) {
+    return res.status(404).json({ message: 'Ticket not found.' });
+  }
+
+  const result = await query(
+    `SELECT id, user_id, comment_text
+     FROM ticket_comments
+     WHERE id = $1 AND ticket_id = $2`,
+    [req.params.commentId, req.params.id]
+  );
+  const comment = result.rows[0];
+
+  if (!comment) {
+    return res.status(404).json({ message: 'Work note not found.' });
+  }
+
+  if (comment.user_id !== req.user.id) {
+    return res.status(403).json({ message: 'You can only delete work notes you created.' });
+  }
+
+  await query('DELETE FROM ticket_comments WHERE id = $1', [req.params.commentId]);
+  await addHistoryEntry(req.params.id, req.user.id, 'deleted comment', 'comment', comment.comment_text, null);
 
   return getTicketComments(req, res);
 }

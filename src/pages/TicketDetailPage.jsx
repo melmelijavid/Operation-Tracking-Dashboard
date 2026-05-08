@@ -3,7 +3,13 @@ import { Link, NavLink, useParams } from 'react-router-dom';
 import '../styles/dashboard.css';
 import '../styles/ticket-detail.css';
 import { AUTH_ROLES, useAuth } from '../auth';
-import { addTicketComment, fetchTicket, fetchTicketComments, fetchTicketHistory } from '../utils/tickets';
+import {
+  addTicketComment,
+  deleteTicketComment,
+  fetchTicket,
+  fetchTicketComments,
+  fetchTicketHistory,
+} from '../utils/tickets';
 
 function displayValue(value) {
   return value || '-';
@@ -53,6 +59,10 @@ function getHistoryText(entry) {
     return 'Added a work note';
   }
 
+  if (entry.action === 'deleted comment') {
+    return 'Deleted a work note';
+  }
+
   if (entry.fieldName) {
     return `${entry.fieldName} changed from ${entry.oldValue} to ${entry.newValue}`;
   }
@@ -62,7 +72,7 @@ function getHistoryText(entry) {
 
 export default function TicketDetailPage() {
   const { id } = useParams();
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [ticket, setTicket] = useState(null);
   const [history, setHistory] = useState([]);
   const [comments, setComments] = useState([]);
@@ -70,6 +80,7 @@ export default function TicketDetailPage() {
   const [error, setError] = useState('');
   const [commentError, setCommentError] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
 
   const canComment = role === AUTH_ROLES.ADMIN || role === AUTH_ROLES.OPERATOR;
 
@@ -116,6 +127,23 @@ export default function TicketDetailPage() {
     }
   }
 
+  async function handleDeleteComment(commentId) {
+    if (deletingCommentId) return;
+
+    try {
+      setDeletingCommentId(commentId);
+      setCommentError('');
+      const updatedComments = await deleteTicketComment(id, commentId);
+      const updatedHistory = await fetchTicketHistory(id);
+      setComments(updatedComments);
+      setHistory(updatedHistory);
+    } catch (err) {
+      setCommentError(err instanceof Error ? err.message : 'Failed to delete work note.');
+    } finally {
+      setDeletingCommentId(null);
+    }
+  }
+
   if (error) {
     return (
       <div className="ticket-detail-page">
@@ -136,22 +164,6 @@ export default function TicketDetailPage() {
     );
   }
 
-  const detailFields = [
-    ['Owner', ticket.Owner],
-    ['Assigned Person', ticket.Assigned_Person],
-    ['Assigned Group', ticket.assignedGroup],
-    ['Company', ticket.company],
-    ['Service Type', ticket.serviceType],
-    ['Product Tier 1', ticket.productCategorizationTier1],
-    ['Product Tier 2', ticket.productCategorizationTier2],
-    ['Product Tier 3', ticket.productCategorizationTier3],
-    ['Category Tier 1', ticket.categorizationTier1],
-    ['Submit Date', formatDate(ticket.submitDate)],
-    ['Last Modified', formatDate(ticket.lastModifiedDate)],
-    ['Close Date', formatDate(ticket.closeDate)],
-    ['Aging', `${ticket.aging} days`],
-  ];
-
   return (
     <div className="ticket-detail-page">
       <div className="ticket-detail-shell">
@@ -166,8 +178,7 @@ export default function TicketDetailPage() {
             <NavLink to="/welcome">Welcome</NavLink>
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Statistics</NavLink>
-            <NavLink to="/users">Users</NavLink>
+            <NavLink to="/statistics">Analytics</NavLink>
           </nav>
 
           <div className="sidebar-status">
@@ -212,21 +223,29 @@ export default function TicketDetailPage() {
 
             <div className="ticket-detail-panel">
               <div className="detail-section-heading">
-                <h2>Ticket Fields</h2>
+                <h2>History</h2>
               </div>
-              <dl className="detail-definition-grid">
-                {detailFields.map(([label, value]) => (
-                  <div key={label}>
-                    <dt>{label}</dt>
-                    <dd>{displayValue(value)}</dd>
-                  </div>
-                ))}
-              </dl>
+
+              <div className="history-list">
+                {history.length === 0 ? (
+                  <p className="detail-muted">No history yet. New changes will appear here.</p>
+                ) : (
+                  history.map((entry) => (
+                    <article className="history-item" key={entry.id}>
+                      <span></span>
+                      <div>
+                        <strong>{getHistoryText(entry)}</strong>
+                        <p>{entry.userName} - {formatDateTime(entry.createdAt)}</p>
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
             </div>
           </section>
 
-          <section className="ticket-detail-grid lower-grid">
-            <div className="ticket-detail-panel">
+          <section className="ticket-detail-notes-row">
+            <div className="ticket-detail-panel work-notes-panel">
               <div className="detail-section-heading">
                 <h2>Work Notes</h2>
               </div>
@@ -253,33 +272,23 @@ export default function TicketDetailPage() {
                 ) : (
                   comments.map((comment) => (
                     <article className="comment-card" key={comment.id}>
-                      <div>
-                        <strong>{comment.userName}</strong>
-                        <span>{formatDateTime(comment.createdAt)}</span>
+                      <div className="comment-card-header">
+                        <div>
+                          <strong>{comment.userName}</strong>
+                          <span>{formatDateTime(comment.createdAt)}</span>
+                        </div>
+                        {String(comment.userId) === String(user?.id) && (
+                          <button
+                            type="button"
+                            className="comment-delete-button"
+                            disabled={deletingCommentId === comment.id}
+                            onClick={() => handleDeleteComment(comment.id)}
+                          >
+                            {deletingCommentId === comment.id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        )}
                       </div>
                       <p>{comment.commentText}</p>
-                    </article>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="ticket-detail-panel">
-              <div className="detail-section-heading">
-                <h2>History</h2>
-              </div>
-
-              <div className="history-list">
-                {history.length === 0 ? (
-                  <p className="detail-muted">No history yet. New changes will appear here.</p>
-                ) : (
-                  history.map((entry) => (
-                    <article className="history-item" key={entry.id}>
-                      <span></span>
-                      <div>
-                        <strong>{getHistoryText(entry)}</strong>
-                        <p>{entry.userName} - {formatDateTime(entry.createdAt)}</p>
-                      </div>
                     </article>
                   ))
                 )}

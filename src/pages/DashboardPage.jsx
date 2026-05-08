@@ -95,8 +95,7 @@ export default function DashboardPage() {
             <NavLink to="/welcome">Welcome</NavLink>
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Statistics</NavLink>
-            <NavLink to="/users">Users</NavLink>
+            <NavLink to="/statistics">Analytics</NavLink>
           </nav>
 
           <div className="sidebar-status">

@@ -275,6 +275,30 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  border: 1px solid rgba(143, 179, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.ticket-card.sla-warning {
+  animation: ticket-warning-border 2.2s ease-in-out infinite;
+}
+
+.ticket-card.sla-danger {
+  animation: ticket-danger-border 1s ease-in-out infinite;
+}
+
+.ticket-card.sla-overdue {
+  border-color: rgba(5, 7, 11, 0.9);
+  box-shadow:
+    inset 0 0 0 2px rgba(5, 7, 11, 0.9),
+    0 0 0 1px rgba(239, 68, 68, 0.22);
+}
+
+.ticket-card.completed {
+  border-color: rgba(74, 222, 128, 0.26);
+  box-shadow:
+    inset 0 0 0 1px rgba(74, 222, 128, 0.14),
+    0 0 0 1px rgba(74, 222, 128, 0.08);
 }
 
 .ticket-card-top {
@@ -305,6 +329,45 @@
 
 .ticket-card h3 a:hover {
   color: #8fb3ff;
+}
+
+.ticket-sla-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  margin-top: 10px;
+  border-radius: 8px;
+  padding: 5px 9px;
+  color: #f7f7f2;
+  background: rgba(255, 255, 255, 0.075);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.ticket-sla-pill.completed {
+  color: #d4ffd9;
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.32);
+}
+
+.ticket-sla-pill.warning {
+  color: #0a1529;
+  background: #ffd166;
+  border-color: rgba(255, 209, 102, 0.72);
+}
+
+.ticket-sla-pill.danger {
+  color: #ffffff;
+  background: #ef4444;
+  border-color: rgba(239, 68, 68, 0.8);
+}
+
+.ticket-sla-pill.overdue {
+  color: #ffffff;
+  background: #111827;
+  border-color: rgba(239, 68, 68, 0.75);
 }
 
 .ticket-badges {
@@ -470,6 +533,38 @@
   padding: 28px;
   color: #d8d8d0;
   text-align: center;
+}
+
+@keyframes ticket-warning-border {
+  0%, 100% {
+    border-color: rgba(255, 209, 102, 0.24);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 209, 102, 0.08),
+      0 0 0 1px rgba(255, 209, 102, 0.08);
+  }
+
+  50% {
+    border-color: rgba(255, 209, 102, 0.74);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 209, 102, 0.18),
+      0 0 0 2px rgba(255, 209, 102, 0.18);
+  }
+}
+
+@keyframes ticket-danger-border {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow:
+      inset 0 0 0 1px rgba(239, 68, 68, 0.1),
+      0 0 0 1px rgba(239, 68, 68, 0.1);
+  }
+
+  50% {
+    border-color: rgba(239, 68, 68, 0.82);
+    box-shadow:
+      inset 0 0 0 1px rgba(239, 68, 68, 0.22),
+      0 0 0 2px rgba(239, 68, 68, 0.2);
+  }
 }
 
 .modal-overlay {

@@ -43,6 +43,17 @@ function getStatusClass(status) {
   return 'pending';
 }
 
+function getTicketCardClass(ticket) {
+  if (ticket.status === 'Resolved' || ticket.status === 'Closed') {
+    return 'ticket-card completed';
+  }
+
+  if (ticket.slaUrgency === 'warning') return 'ticket-card sla-warning';
+  if (ticket.slaUrgency === 'danger') return 'ticket-card sla-danger';
+  if (ticket.slaUrgency === 'overdue') return 'ticket-card sla-overdue';
+  return 'ticket-card';
+}
+
 function getNextTicketId(tickets) {
   const nextNumber = tickets.reduce((current, ticket) => {
     const numericId = Number.parseInt(String(ticket.id).replace(/\D/g, ''), 10);
@@ -334,8 +345,7 @@ function openDeleteModal(ticket) {
             <NavLink to="/" end>Home</NavLink>
             <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Statistics</NavLink>
-            <NavLink to="/users">Users</NavLink>
+            <NavLink to="/statistics">Analytics</NavLink>
           </nav>
 
           <div className="sidebar-divider"></div>
@@ -407,11 +417,14 @@ function openDeleteModal(ticket) {
           ) : (
             <section className="ticket-grid">
               {visibleTickets.map((ticket) => (
-                <article className="ticket-card" key={ticket.id}>
+                <article className={getTicketCardClass(ticket)} key={ticket.id}>
                   <div className="ticket-card-top">
                     <div>
                       <p className="ticket-card-label">{ticket.id}</p>
                       <h3><Link to={`/tickets/${encodeURIComponent(ticket.id)}`}>{ticket.serviceType}</Link></h3>
+                      <span className={`ticket-sla-pill ${ticket.slaUrgency || 'none'}`}>
+                        SLA: {ticket.slaRemainingLabel || '-'}
+                      </span>
                     </div>
                     <div className="ticket-badges">
                       <span className={`status-pill ${getStatusClass(ticket.status)}`}>{ticket.status}</span>
