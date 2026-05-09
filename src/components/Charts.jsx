@@ -37,7 +37,7 @@ export function StackedBarTrendChart({ groups }) {
   const W = 820;
   const H = 320;
   const padL = 54;
-  const padR = 24;
+  const padR = 58;
   const padT = 36;
   const padB = 64;
   const plotW = W - padL - padR;
@@ -50,9 +50,9 @@ export function StackedBarTrendChart({ groups }) {
   const toY = (v) => padT + plotH * (1 - v / yMax);
   const bx = (i) => padL + i * barGroupW + barOff;
   const midX = (i) => padL + i * barGroupW + barGroupW / 2;
-  const gridLines = Array.from({ length: 6 }, (_, i) => ({
-    y: toY((i / 5) * yMax),
-    label: Math.round((i / 5) * yMax),
+  const gridLines = Array.from({ length: 5 }, (_, i) => ({
+    y: toY((i / 4) * yMax),
+    label: Math.round((i / 4) * yMax),
   }));
   const trendPts = groups.map((g, i) => ({ x: midX(i), y: toY(g.total) }));
   const trendPath = smoothLine(trendPts);
@@ -116,6 +116,7 @@ export function StackedBarTrendChart({ groups }) {
         })}
 
         <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+        <line x1={W - padR} y1={padT} x2={W - padR} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
         <line x1={padL} y1={H - padB} x2={W - padR} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
       </svg>
 
@@ -163,7 +164,7 @@ export function SLAPerformanceChart({ groups }) {
   });
 
   const W = 820;
-  const H = 300;
+  const H = 320;
   const padL = 54;
   const padR = 58;
   const padT = 36;
@@ -271,21 +272,21 @@ export function ServiceTypeChart({ groups }) {
   const W = 820;
   const H = 320;
   const padL = 54;
-  const padR = 24;
+  const padR = 58;
   const padT = 36;
-  const padB = 84;
+  const padB = 64;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
   const yMax = Math.ceil(maxTotal / 10) * 10 || 10;
   const barGroupW = plotW / groups.length;
-  const barW = Math.max(8, Math.min(barGroupW * 0.58, 54));
+  const barW = Math.max(6, Math.min(barGroupW * 0.62, 54));
   const barOff = (barGroupW - barW) / 2;
   const toY = (v) => padT + plotH * (1 - v / yMax);
   const bx = (i) => padL + i * barGroupW + barOff;
   const midX = (i) => padL + i * barGroupW + barGroupW / 2;
-  const gridLines = Array.from({ length: 6 }, (_, i) => ({
-    y: toY((i / 5) * yMax),
-    label: Math.round((i / 5) * yMax),
+  const gridLines = Array.from({ length: 5 }, (_, i) => ({
+    y: toY((i / 4) * yMax),
+    label: Math.round((i / 4) * yMax),
   }));
 
   return (
@@ -306,7 +307,7 @@ export function ServiceTypeChart({ groups }) {
           return (
             <g key={group.label} style={{ cursor: 'pointer' }} onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)}>
               {isHov && <rect x={padL + index * barGroupW} y={padT} width={barGroupW} height={plotH} fill="rgba(255,255,255,0.04)" />}
-              <rect x={bx(index)} y={barY} width={barW} height={barH} fill={color} opacity={hovered !== null && !isHov ? 0.28 : 0.9} rx="4" />
+              <rect x={bx(index)} y={barY} width={barW} height={barH} fill={color} opacity={hovered !== null && !isHov ? 0.28 : 0.9} />
               <text x={midX(index)} y={barY - 7} textAnchor="middle" fill="rgba(255,255,255,0.88)" fontSize="10" fontWeight="800" style={{ userSelect: 'none' }}>{group.total}</text>
               <text x={midX(index)} y={H - padB + 18} textAnchor="middle" fill="#5a6a7a" fontSize="10" fontWeight="700" style={{ userSelect: 'none' }}>
                 {group.label.length > 12 ? `${group.label.slice(0, 12)}...` : group.label}
@@ -316,6 +317,7 @@ export function ServiceTypeChart({ groups }) {
         })}
 
         <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+        <line x1={W - padR} y1={padT} x2={W - padR} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
         <line x1={padL} y1={H - padB} x2={W - padR} y2={H - padB} stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
       </svg>
 
