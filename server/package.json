@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed": "node scripts/seed.js"
+    "migrate": "node-pg-migrate -m migrations --envPath .env",
+    "migrate:up": "npm run migrate -- up",
+    "migrate:down": "npm run migrate -- down",
+    "migrate:create": "node-pg-migrate -m migrations --envPath .env -j js create",
+    "seed": "npm run migrate:up && node scripts/seed.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -14,8 +18,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
+    "express-async-errors": "^3.1.1",
     "express-rate-limit": "^8.5.1",
     "jsonwebtoken": "^9.0.2",
+    "node-pg-migrate": "^8.0.4",
     "pg": "^8.13.1"
   },
   "devDependencies": {

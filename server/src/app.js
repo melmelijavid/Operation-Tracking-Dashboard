@@ -1,9 +1,16 @@
+// Must be imported before any route handlers so its monkey-patch on
+// Express's Layer prototype is in place. Lets `async` route handlers
+// throw and have the error reach our errorHandler instead of crashing
+// the process or hanging the request.
+import 'express-async-errors';
+
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import authRoutes from './routes/authRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
@@ -24,5 +31,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/users', userRoutes);
+
+// 404 for unmatched routes, then the catch-all error handler. Both must
+// come after the routes above so they don't shadow real handlers.
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

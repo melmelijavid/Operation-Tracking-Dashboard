@@ -1,22 +1,22 @@
+// Seed script. Loads demo users + demo tickets into the database.
+//
+// Schema is no longer this script's responsibility — it lives in the
+// migrations/ folder and is applied via `npm run migrate:up`. The
+// `npm run seed` script in package.json runs migrations first, then
+// invokes this file.
+
 import bcrypt from 'bcryptjs';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { pool, query } from '../src/db.js';
 
 dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const schemaPath = path.resolve(__dirname, '..', 'sql', 'schema.sql');
-const seedPath = path.resolve(__dirname, '..', 'sql', 'seed.sql');
-
 async function run() {
-  const schemaSql = await readFile(schemaPath, 'utf8');
-  const seedResetSql = await readFile(seedPath, 'utf8');
-
-  await query(schemaSql);
-  await query(seedResetSql);
+  // Reset the data tables. CASCADE clears child rows in ticket_history /
+  // ticket_comments, RESTART IDENTITY resets the SERIAL counters so demo
+  // IDs stay predictable between runs.
+  await query('TRUNCATE TABLE tickets RESTART IDENTITY CASCADE;');
+  await query('TRUNCATE TABLE users RESTART IDENTITY CASCADE;');
 
   const adminHash = await bcrypt.hash('admin1234', 10);
   const operatorHash = await bcrypt.hash('operator1234', 10);
