@@ -4,7 +4,8 @@ import { authService } from './authService';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // Optimistic first paint from the cached user; always revalidated below against /me.
+  const [user, setUser] = useState(() => authService.peekCachedUser());
   const [isBootstrapping, setIsBootstrapping] = useState(true);
 
   useEffect(() => {

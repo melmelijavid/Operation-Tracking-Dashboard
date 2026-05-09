@@ -1,65 +1,54 @@
 import { apiRequest } from '../utils/api';
-import { clearStoredSession, loadStoredSession, saveStoredSession } from './sessionStorage';
+import { clearStoredUser, loadStoredUser, saveStoredUser } from './sessionStorage';
 
 export const authService = {
-  async login({ email, password, rememberMe }) {
-    const session = await apiRequest('/auth/login', {
+  async login({ email, password }) {
+    // The server sets the session cookie via Set-Cookie. We just keep the
+    // user object in localStorage to avoid a flash of unauthenticated UI on
+    // the next page load — it's revalidated against /api/auth/me on bootstrap.
+    const response = await apiRequest('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({
-        email,
-        password,
-      }),
+      body: JSON.stringify({ email, password }),
     });
-
-    saveStoredSession({
-      token: session.token,
-      user: session.user,
-      rememberMe: Boolean(rememberMe),
-      createdAt: Date.now(),
-    });
-
-    return session;
+    saveStoredUser(response.user);
+    return response;
   },
 
-  async signup({ name, email, password, rememberMe }) {
-    const session = await apiRequest('/auth/signup', {
+  async signup({ name, email, password }) {
+    const response = await apiRequest('/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-      }),
+      body: JSON.stringify({ name, email, password }),
     });
-
-    saveStoredSession({
-      token: session.token,
-      user: session.user,
-      rememberMe: Boolean(rememberMe),
-      createdAt: Date.now(),
-    });
-
-    return session;
+    saveStoredUser(response.user);
+    return response;
   },
 
   async logout() {
-    clearStoredSession();
+    try {
+      await apiRequest('/auth/logout', { method: 'POST' });
+    } catch (error) {
+      // Even if the server call fails, drop the local cache so the UI
+      // doesn't show a stale logged-in state.
+    }
+    clearStoredUser();
   },
 
   async getSession() {
-    const storedSession = loadStoredSession();
-    if (!storedSession?.token) return null;
-
+    // Always ask the server. If the cookie is missing or expired we'll get a
+    // 401 and treat the user as logged out.
     try {
       const response = await apiRequest('/auth/me');
-      const session = {
-        ...storedSession,
-        user: response.user,
-      };
-      saveStoredSession(session);
-      return session;
+      saveStoredUser(response.user);
+      return { user: response.user };
     } catch (error) {
-      clearStoredSession();
+      clearStoredUser();
       return null;
     }
+  },
+
+  // Synchronous best-effort read used to render an initial paint without
+  // waiting for /me. Always treat as a hint, not authoritative.
+  peekCachedUser() {
+    return loadStoredUser();
   },
 };

@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
+import { SESSION_COOKIE_NAME } from '../controllers/authController.js';
 
 export function authenticateToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = req.cookies?.[SESSION_COOKIE_NAME];
 
   if (!token) {
     return res.status(401).json({ message: 'Authentication token is missing.' });

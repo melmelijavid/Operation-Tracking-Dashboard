@@ -2,6 +2,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from '../db.js';
 
+// Cookie name for the JWT session. The token never leaves the server boundary
+// in the response body — it lives only in this httpOnly cookie.
+export const SESSION_COOKIE_NAME = 'otd_session';
+const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days, matching the JWT expiry
+
 function signToken(user) {
   return jwt.sign(
     {
@@ -15,17 +20,33 @@ function signToken(user) {
   );
 }
 
-function buildSessionResponse(user) {
-  const token = signToken(user);
-
+function getSessionCookieOptions() {
   return {
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: SESSION_MAX_AGE_MS,
+    path: '/',
+  };
+}
+
+function setSessionCookie(res, token) {
+  res.cookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
+}
+
+function clearSessionCookie(res) {
+  // clearCookie must echo the same path / sameSite / secure flags or the
+  // browser will silently keep the original cookie around.
+  const { maxAge: _ignored, ...options } = getSessionCookieOptions();
+  res.clearCookie(SESSION_COOKIE_NAME, options);
+}
+
+function userResponse(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
   };
 }
 
@@ -60,7 +81,9 @@ export async function signup(req, res) {
     [name.trim(), normalizedEmail, passwordHash, role]
   );
 
-  return res.status(201).json(buildSessionResponse(result.rows[0]));
+  const user = result.rows[0];
+  setSessionCookie(res, signToken(user));
+  return res.status(201).json({ user: userResponse(user) });
 }
 
 export async function login(req, res) {
@@ -89,7 +112,13 @@ export async function login(req, res) {
     return res.status(401).json({ message: 'Invalid email or password.' });
   }
 
-  return res.json(buildSessionResponse(user));
+  setSessionCookie(res, signToken(user));
+  return res.json({ user: userResponse(user) });
+}
+
+export async function logout(req, res) {
+  clearSessionCookie(res);
+  return res.status(204).end();
 }
 
 export async function getCurrentUser(req, res) {
