@@ -5,6 +5,8 @@ import { AUTH_ROLES, useAuth } from '../auth';
 import { createTicket, deleteTicket, fetchTickets, updateTicket } from '../utils/tickets';
 import { fetchUsers } from '../utils/users';
 
+const TICKETS_PER_PAGE = 6;
+
 function normalizeValue(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -114,6 +116,7 @@ export default function TicketManagementPage() {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState('my');
   const [filters, setFilters] = useState({ search: '', status: '', priority: '' });
+  const [currentPage, setCurrentPage] = useState(1);
   const [modalMode, setModalMode] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -162,7 +165,7 @@ export default function TicketManagementPage() {
 
   const sourceTickets = activeTab === 'my' ? myTickets : assignedTickets;
 
-  const visibleTickets = useMemo(() => {
+  const filteredTickets = useMemo(() => {
     const searchTerm = filters.search.trim().toLowerCase();
 
     return sourceTickets.filter((ticket) => {
@@ -179,6 +182,28 @@ export default function TicketManagementPage() {
       return matchesSearch && matchesStatus && matchesPriority;
     });
   }, [sourceTickets, filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / TICKETS_PER_PAGE));
+  const pageStart = (currentPage - 1) * TICKETS_PER_PAGE;
+  const pageEnd = pageStart + TICKETS_PER_PAGE;
+  const visibleTickets = filteredTickets.slice(pageStart, pageEnd);
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  function updateFilter(name, value) {
+    setFilters((current) => ({ ...current, [name]: value }));
+    setCurrentPage(1);
+  }
+
+  function switchTab(nextTab) {
+    setActiveTab(nextTab);
+    setCurrentPage(1);
+  }
 
   function openCreateModal() {
     setSelectedTicket(null);
@@ -225,7 +250,7 @@ export default function TicketManagementPage() {
     setSubmitting(false);
   }
 
-function openDeleteModal(ticket) {
+  function openDeleteModal(ticket) {
     setDeleteTarget(ticket);
   }
 
@@ -351,10 +376,10 @@ function openDeleteModal(ticket) {
           <div className="sidebar-divider"></div>
 
           <div className="sidebar-modes" aria-label="Ticket sections">
-            <button type="button" className={activeTab === 'my' ? 'mode-button active' : 'mode-button'} onClick={() => setActiveTab('my')}>
+            <button type="button" className={activeTab === 'my' ? 'mode-button active' : 'mode-button'} onClick={() => switchTab('my')}>
               My Tickets
             </button>
-            <button type="button" className={activeTab === 'assigned' ? 'mode-button active' : 'mode-button'} onClick={() => setActiveTab('assigned')}>
+            <button type="button" className={activeTab === 'assigned' ? 'mode-button active' : 'mode-button'} onClick={() => switchTab('assigned')}>
               Assigned Tickets
             </button>
           </div>
@@ -380,12 +405,12 @@ function openDeleteModal(ticket) {
           <section className="toolbar-panel">
             <div className="toolbar-copy">
               <h2>{activeTab === 'my' ? 'My Tickets' : 'Assigned Tickets'}</h2>
-              <p>{visibleTickets.length} tickets in this view</p>
+              <p>{filteredTickets.length} tickets in this view</p>
             </div>
 
             <div className="toolbar-filters">
-              <input value={filters.search} onChange={(e) => setFilters((current) => ({ ...current, search: e.target.value }))} type="text" placeholder="Search tickets" />
-              <select value={filters.status} onChange={(e) => setFilters((current) => ({ ...current, status: e.target.value }))}>
+              <input value={filters.search} onChange={(e) => updateFilter('search', e.target.value)} type="text" placeholder="Search tickets" />
+              <select value={filters.status} onChange={(e) => updateFilter('status', e.target.value)}>
                 <option value="">All Statuses</option>
                 <option value="Open">Open</option>
                 <option value="In Progress">In Progress</option>
@@ -393,7 +418,7 @@ function openDeleteModal(ticket) {
                 <option value="Resolved">Resolved</option>
                 <option value="Closed">Closed</option>
               </select>
-              <select value={filters.priority} onChange={(e) => setFilters((current) => ({ ...current, priority: e.target.value }))}>
+              <select value={filters.priority} onChange={(e) => updateFilter('priority', e.target.value)}>
                 <option value="">All Priorities</option>
                 <option value="Critical">Critical</option>
                 <option value="High">High</option>
@@ -415,59 +440,96 @@ function openDeleteModal(ticket) {
               {error || (activeTab === 'my' ? 'No owned tickets match this view.' : 'No assigned tickets match this view.')}
             </section>
           ) : (
-            <section className="ticket-grid">
-              {visibleTickets.map((ticket) => (
-                <article className={getTicketCardClass(ticket)} key={ticket.id}>
-                  <div className="ticket-card-top">
-                    <div>
-                      <p className="ticket-card-label">{ticket.id}</p>
-                      <h3><Link to={`/tickets/${encodeURIComponent(ticket.id)}`}>{ticket.serviceType}</Link></h3>
-                      <span className={`ticket-sla-pill ${ticket.slaUrgency || 'none'}`}>
-                        SLA: {ticket.slaRemainingLabel || '-'}
-                      </span>
+            <>
+              <section className="ticket-grid">
+                {visibleTickets.map((ticket) => (
+                  <article className={getTicketCardClass(ticket)} key={ticket.id}>
+                    <div className="ticket-card-top">
+                      <div>
+                        <p className="ticket-card-label">{ticket.id}</p>
+                        <h3><Link to={`/tickets/${encodeURIComponent(ticket.id)}`}>{ticket.serviceType}</Link></h3>
+                        <span className={`ticket-sla-pill ${ticket.slaUrgency || 'none'}`}>
+                          SLA: {ticket.slaRemainingLabel || '-'}
+                        </span>
+                      </div>
+                      <div className="ticket-badges">
+                        <span className={`status-pill ${getStatusClass(ticket.status)}`}>{ticket.status}</span>
+                        <span className={`priority-pill ${getPriorityClass(ticket.priority)}`}>{ticket.priority}</span>
+                      </div>
                     </div>
-                    <div className="ticket-badges">
-                      <span className={`status-pill ${getStatusClass(ticket.status)}`}>{ticket.status}</span>
-                      <span className={`priority-pill ${getPriorityClass(ticket.priority)}`}>{ticket.priority}</span>
+
+                    <p className="ticket-description">{ticket.description}</p>
+
+                    <dl className="ticket-properties">
+                      <div><dt>Owner</dt><dd>{ticket.Owner}</dd></div>
+                      <div><dt>Assigned</dt><dd>{ticket.Assigned_Person}</dd></div>
+                      <div><dt>Queue</dt><dd>{ticket.assignedGroup}</dd></div>
+                      <div><dt>Company</dt><dd>{ticket.company || '-'}</dd></div>
+                      <div><dt>Submitted</dt><dd>{formatDate(ticket.submitDate)}</dd></div>
+                      <div><dt>Last Modified</dt><dd>{formatDate(ticket.lastModifiedDate)}</dd></div>
+                      <div><dt>Close Date</dt><dd>{formatDate(ticket.closeDate)}</dd></div>
+                      <div><dt>Aging</dt><dd>{ticket.aging} days</dd></div>
+                    </dl>
+
+                    <div className="ticket-card-footer">
+                      <Link className="card-action card-detail-link" to={`/tickets/${encodeURIComponent(ticket.id)}`}>
+                        Details
+                      </Link>
+                      {canEditMyTickets && activeTab === 'my' && (
+                        <>
+                          <button type="button" className="card-action card-action-secondary" onClick={() => openDeleteModal(ticket)}>
+                            Delete
+                          </button>
+                          <button type="button" className="card-action" onClick={() => openEditModal(ticket)}>
+                            Edit
+                          </button>
+                        </>
+                      )}
+                      {canUpdateAssignedTickets && activeTab === 'assigned' && (
+                        <button type="button" className="card-action" onClick={() => openUpdateModal(ticket)}>
+                          Update
+                        </button>
+                      )}
                     </div>
-                  </div>
+                  </article>
+                ))}
+              </section>
 
-                  <p className="ticket-description">{ticket.description}</p>
-
-                  <dl className="ticket-properties">
-                    <div><dt>Owner</dt><dd>{ticket.Owner}</dd></div>
-                    <div><dt>Assigned</dt><dd>{ticket.Assigned_Person}</dd></div>
-                    <div><dt>Queue</dt><dd>{ticket.assignedGroup}</dd></div>
-                    <div><dt>Company</dt><dd>{ticket.company || '-'}</dd></div>
-                    <div><dt>Submitted</dt><dd>{formatDate(ticket.submitDate)}</dd></div>
-                    <div><dt>Last Modified</dt><dd>{formatDate(ticket.lastModifiedDate)}</dd></div>
-                    <div><dt>Close Date</dt><dd>{formatDate(ticket.closeDate)}</dd></div>
-                    <div><dt>Aging</dt><dd>{ticket.aging} days</dd></div>
-                  </dl>
-
-                  <div className="ticket-card-footer">
-                    <Link className="card-action card-detail-link" to={`/tickets/${encodeURIComponent(ticket.id)}`}>
-                      Details
-                    </Link>
-                    {canEditMyTickets && activeTab === 'my' && (
-                      <>
-                        <button type="button" className="card-action card-action-secondary" onClick={() => openDeleteModal(ticket)}>
-                          Delete
-                        </button>
-                        <button type="button" className="card-action" onClick={() => openEditModal(ticket)}>
-                          Edit
-                        </button>
-                      </>
-                    )}
-                    {canUpdateAssignedTickets && activeTab === 'assigned' && (
-                      <button type="button" className="card-action" onClick={() => openUpdateModal(ticket)}>
-                        Update
-                      </button>
-                    )}
-                  </div>
-                </article>
-              ))}
-            </section>
+              <div className="ticket-pagination" aria-label="Ticket pagination">
+                <p>
+                  Showing {pageStart + 1}-{Math.min(pageEnd, filteredTickets.length)} of {filteredTickets.length} tickets
+                </p>
+                <div className="ticket-pagination-buttons">
+                  <button
+                    type="button"
+                    className="ticket-page-button"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  >
+                    Previous
+                  </button>
+                  {pageNumbers.map((pageNumber) => (
+                    <button
+                      type="button"
+                      key={pageNumber}
+                      className={currentPage === pageNumber ? 'ticket-page-button active' : 'ticket-page-button'}
+                      aria-current={currentPage === pageNumber ? 'page' : undefined}
+                      onClick={() => setCurrentPage(pageNumber)}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="ticket-page-button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </main>
       </div>
