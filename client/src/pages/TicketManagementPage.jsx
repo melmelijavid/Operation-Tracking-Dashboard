@@ -4,6 +4,7 @@ import '../styles/ticket-management.css';
 import { AUTH_ROLES, useAuth } from '../auth';
 import { createTicket, deleteTicket, fetchTickets, updateTicket } from '../utils/tickets';
 import { fetchUsers } from '../utils/users';
+import { fetchTeams } from '../utils/teams';
 
 const TICKETS_PER_PAGE = 6;
 
@@ -132,6 +133,7 @@ export default function TicketManagementPage() {
   const { role, user, logout } = useAuth();
   const [allTickets, setAllTickets] = useState([]);
   const [users, setUsers] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [activeTab, setActiveTab] = useState('my');
   const [filters, setFilters] = useState({ search: '', status: '', priority: '', sla: '' });
   const [currentPage, setCurrentPage] = useState(1);
@@ -146,13 +148,19 @@ export default function TicketManagementPage() {
     async function loadData() {
       try {
         setError('');
-        const [ticketData, userData] = await Promise.all([fetchTickets(), fetchUsers()]);
+        const [ticketData, userData, teamData] = await Promise.all([
+          fetchTickets(),
+          fetchUsers(),
+          fetchTeams(),
+        ]);
         setAllTickets(ticketData);
         setUsers(userData);
+        setTeams(teamData);
       } catch (err) {
         setError('Failed to load ticket data from the backend API.');
         setAllTickets([]);
         setUsers([]);
+        setTeams([]);
       }
     }
 
@@ -581,7 +589,19 @@ export default function TicketManagementPage() {
                 </select>
 
                 <label htmlFor="ticket-group">Assigned Group</label>
-                <input id="ticket-group" type="text" required value={formData.assignedGroup} onChange={(e) => setFormData((current) => ({ ...current, assignedGroup: e.target.value }))} />
+                <select
+                  id="ticket-group"
+                  required
+                  value={formData.assignedGroup}
+                  onChange={(e) => setFormData((current) => ({ ...current, assignedGroup: e.target.value }))}
+                >
+                  {!teams.some((t) => t.name === formData.assignedGroup) && formData.assignedGroup && (
+                    <option value={formData.assignedGroup}>{formData.assignedGroup} (legacy)</option>
+                  )}
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.name}>{team.name}</option>
+                  ))}
+                </select>
 
                 <label htmlFor="ticket-service">Service Type</label>
                 <input id="ticket-service" type="text" required value={formData.serviceType} onChange={(e) => setFormData((current) => ({ ...current, serviceType: e.target.value }))} />

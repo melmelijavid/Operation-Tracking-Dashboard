@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import '../styles/dashboard.css';
 import { useAuth } from '../auth';
 import { fetchTickets, getDashboardTicketsForRole } from '../utils/tickets';
+import { fetchTeams } from '../utils/teams';
 
 const TICKETS_PER_PAGE = 20;
 
@@ -61,6 +62,7 @@ function formatDate(value) {
 export default function DashboardPage() {
   const { role } = useAuth();
   const [tickets, setTickets] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [filters, setFilters] = useState({ search: '', status: 'All', priority: 'All', group: 'All', date: '', sla: 'All' });
   const [error, setError] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -70,11 +72,13 @@ export default function DashboardPage() {
     async function loadTickets() {
       try {
         setError('');
-        const data = await fetchTickets();
-        setTickets(getDashboardTicketsForRole(data, role));
+        const [ticketsData, teamsData] = await Promise.all([fetchTickets(), fetchTeams()]);
+        setTickets(getDashboardTicketsForRole(ticketsData, role));
+        setTeams(teamsData);
       } catch (err) {
         setError('Failed to load ticket data from the backend API.');
         setTickets([]);
+        setTeams([]);
       }
     }
     loadTickets();
@@ -171,7 +175,15 @@ export default function DashboardPage() {
             <div className="filters">
               <div className="field"><label htmlFor="statusFilter">Status</label><select id="statusFilter" value={filters.status} onChange={(e)=>updateFilter('status', e.target.value)}><option value="All">All</option><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="Pending">Pending</option><option value="Resolved">Resolved</option><option value="Closed">Closed</option></select></div>
               <div className="field"><label htmlFor="priorityFilter">Priority</label><select id="priorityFilter" value={filters.priority} onChange={(e)=>updateFilter('priority', e.target.value)}><option value="All">All</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
-              <div className="field"><label htmlFor="groupFilter">Assigned Group</label><select id="groupFilter" value={filters.group} onChange={(e)=>updateFilter('group', e.target.value)}><option value="All">All</option><option value="Messaging Support">Messaging Support</option><option value="Network Team">Network Team</option><option value="Desktop Support">Desktop Support</option><option value="Field Support">Field Support</option><option value="Application Support">Application Support</option><option value="Service Desk">Service Desk</option></select></div>
+              <div className="field">
+                <label htmlFor="groupFilter">Assigned Group</label>
+                <select id="groupFilter" value={filters.group} onChange={(e) => updateFilter('group', e.target.value)}>
+                  <option value="All">All</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.name}>{team.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="field"><label htmlFor="dateFilter">Submit Date</label><input id="dateFilter" type="date" value={filters.date} onChange={(e)=>updateFilter('date', e.target.value)} /></div>
               <div className="field"><label htmlFor="slaFilter">SLA</label><select id="slaFilter" value={filters.sla} onChange={(e)=>updateFilter('sla', e.target.value)}><option value="All">All</option><option value="Overdue">Overdue</option><option value="Urgent">Urgent</option><option value="Warning">Warning</option><option value="Normal">Normal</option></select></div>
             </div>
