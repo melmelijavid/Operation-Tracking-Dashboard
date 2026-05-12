@@ -9,6 +9,8 @@ const ticketSelect = `
     t.status,
     t.priority,
     t.assigned_group,
+    t.team_id,
+    team.name AS team_name,
     t.service_type,
     TO_CHAR(t.submit_date, 'YYYY-MM-DD') AS submit_date,
     TO_CHAR(t.last_modified_date, 'YYYY-MM-DD') AS last_modified_date,
@@ -31,7 +33,34 @@ const ticketSelect = `
   FROM tickets t
   JOIN users owner_user ON owner_user.id = t.owner_user_id
   LEFT JOIN users assigned_user ON assigned_user.id = t.assigned_person_user_id
+  LEFT JOIN teams team ON team.id = t.team_id
 `;
+
+// Resolves the team for create/update. Accepts either `teamId` (preferred,
+// from the new dropdown UI) or `assignedGroup` (legacy free-text string).
+// Returns { teamId, assignedGroup } with both columns kept in sync.
+// Throws 400 if a teamId is provided but doesn't exist.
+async function resolveTicketTeam({ teamId, assignedGroup }) {
+  if (teamId !== undefined && teamId !== null && teamId !== '') {
+    const r = await query('SELECT id, name FROM teams WHERE id = $1', [Number(teamId)]);
+    if (r.rowCount === 0) {
+      const err = new Error('Selected team does not exist.');
+      err.status = 400;
+      throw err;
+    }
+    return { teamId: r.rows[0].id, assignedGroup: r.rows[0].name };
+  }
+
+  if (assignedGroup) {
+    const r = await query('SELECT id FROM teams WHERE name = $1', [assignedGroup]);
+    return {
+      teamId: r.rowCount > 0 ? r.rows[0].id : null,
+      assignedGroup,
+    };
+  }
+
+  return { teamId: null, assignedGroup: null };
+}
 
 async function fetchAllTickets() {
   const result = await query(`${ticketSelect} ORDER BY t.submit_date DESC, t.id DESC`);
@@ -245,6 +274,7 @@ export async function createTicket(req, res) {
     status,
     priority,
     assignedGroup,
+    teamId,
     serviceType,
     submitDate,
     company,
@@ -258,9 +288,11 @@ export async function createTicket(req, res) {
     assignedPersonUserId,
   } = req.body;
 
-  if (!id || !description || !status || !priority || !assignedGroup || !serviceType || !submitDate) {
+  if (!id || !description || !status || !priority || (!assignedGroup && !teamId) || !serviceType || !submitDate) {
     return res.status(400).json({ message: 'Missing required ticket fields.' });
   }
+
+  const team = await resolveTicketTeam({ teamId, assignedGroup });
 
   const closeDateValue = status === 'Closed' ? getTodayDate() : null;
   const lastModifiedDateValue = getTodayDate();
@@ -276,6 +308,7 @@ export async function createTicket(req, res) {
       status,
       priority,
       assigned_group,
+      team_id,
       service_type,
       submit_date,
       last_modified_date,
@@ -291,13 +324,14 @@ export async function createTicket(req, res) {
       aging,
       owner_user_id,
       assigned_person_user_id
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
     [
       id,
       description,
       status,
       priority,
-      assignedGroup,
+      team.assignedGroup,
+      team.teamId,
       serviceType,
       submitDate,
       lastModifiedDateValue,
@@ -377,6 +411,12 @@ export async function updateTicket(req, res) {
     currentTicket.close_date
   );
 
+  // Resolve the team for this update. If the request didn't include either
+  // teamId or assignedGroup, fall back to what's already on the ticket.
+  const team = (req.body.teamId !== undefined || req.body.assignedGroup !== undefined)
+    ? await resolveTicketTeam({ teamId: req.body.teamId, assignedGroup: req.body.assignedGroup })
+    : { teamId: currentTicket.team_id, assignedGroup: currentTicket.assigned_group };
+
   await query(
     `UPDATE tickets
      SET
@@ -384,27 +424,29 @@ export async function updateTicket(req, res) {
        status = $2,
        priority = $3,
        assigned_group = $4,
-       service_type = $5,
-       submit_date = $6,
+       team_id = $5,
+       service_type = $6,
+       submit_date = $7,
        last_modified_date = CURRENT_DATE,
-       close_date = $7,
-       company = $8,
-       product_categorization_tier1 = $9,
-       product_categorization_tier2 = $10,
-       product_categorization_tier3 = $11,
-       categorization_tier1 = $12,
-       sla_type = $13,
-       sla_hours = $14,
-       sla_deadline = $15,
-       aging = $16,
-       assigned_person_user_id = $17,
+       close_date = $8,
+       company = $9,
+       product_categorization_tier1 = $10,
+       product_categorization_tier2 = $11,
+       product_categorization_tier3 = $12,
+       categorization_tier1 = $13,
+       sla_type = $14,
+       sla_hours = $15,
+       sla_deadline = $16,
+       aging = $17,
+       assigned_person_user_id = $18,
        updated_at = NOW()
-     WHERE id = $18`,
+     WHERE id = $19`,
     [
       req.body.description,
       req.body.status,
       req.body.priority,
-      req.body.assignedGroup,
+      team.assignedGroup,
+      team.teamId,
       req.body.serviceType,
       req.body.submitDate,
       closeDateValue,
@@ -426,7 +468,8 @@ export async function updateTicket(req, res) {
     { fieldName: 'Description', oldValue: currentTicket.description, newValue: req.body.description },
     { fieldName: 'Status', oldValue: currentTicket.status, newValue: req.body.status },
     { fieldName: 'Priority', oldValue: currentTicket.priority, newValue: req.body.priority },
-    { fieldName: 'Assigned Group', oldValue: currentTicket.assigned_group, newValue: req.body.assignedGroup },
+    { fieldName: 'Assigned Group', oldValue: currentTicket.assigned_group, newValue: team.assignedGroup },
+    { fieldName: 'Team', oldValue: currentTicket.team_id, newValue: team.teamId },
     { fieldName: 'Service Type', oldValue: currentTicket.service_type, newValue: req.body.serviceType },
     { fieldName: 'Submit Date', oldValue: currentTicket.submit_date, newValue: req.body.submitDate },
     { fieldName: 'Close Date', oldValue: currentTicket.close_date, newValue: closeDateValue },
