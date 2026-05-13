@@ -7,6 +7,7 @@ import 'express-async-errors';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import teamRoutes from './routes/teamRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
@@ -33,6 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 for unmatched routes, then the catch-all error handler. Both must
 // come after the routes above so they don't shadow real handlers.
