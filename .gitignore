@@ -5,6 +5,7 @@ server/node_modules/
 # Build output
 client/dist/
 client/.vite/
+design-prototypes/
 
 # Environment variables (commit only the .env.example files)
 client/.env

@@ -15,7 +15,7 @@
 
 .ticket-shell {
   display: grid;
-  grid-template-columns: 244px minmax(0, 1fr);
+  grid-template-columns: 252px minmax(0, 1fr);
   gap: 18px;
   max-width: 1520px;
   margin: 0 auto;
@@ -39,53 +39,72 @@
   top: 20px;
   min-height: calc(100vh - 40px);
   border-radius: 8px;
-  padding: 22px;
+  padding: 28px 21px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  background: linear-gradient(180deg, #132851, #071225);
+  border-color: rgba(143, 179, 255, 0.28);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.ticket-hero,
+.toolbar-panel {
+  border-color: rgba(143, 179, 255, 0.22);
+  background: linear-gradient(180deg, rgba(19, 40, 81, 0.96), rgba(7, 18, 37, 0.96));
 }
 
 .brand-block {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 8px;
 }
 
 .brand-logo {
-  width: 112px;
+  width: 116px;
   filter: brightness(0) invert(1);
 }
 
 .brand-block p {
   margin: 0;
-  color: #d8d8d0;
+  color: #b8c7e6;
   font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .sidebar-links,
 .sidebar-modes {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
+}
+
+.sidebar-links {
+  margin-top: 60px;
+}
+
+.sidebar-modes {
+  margin-top: 24px;
 }
 
 .sidebar-links a,
 .mode-button,
 .logout-button {
-  min-height: 46px;
-  border-radius: 8px;
-  padding: 12px 14px;
-  border: 1px solid transparent;
-  background: transparent;
+  min-height: 38px;
+  border-radius: 6px;
+  padding: 10px 14px;
+  border: 1px solid rgba(143, 179, 255, 0.32);
+  background: rgba(23, 43, 85, 0.64);
   color: #f7f7f2;
   text-decoration: none;
   text-align: left;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sidebar-links a:hover,
@@ -93,14 +112,15 @@
 .mode-button:hover,
 .mode-button.active,
 .logout-button:hover {
-  background: rgba(143, 179, 255, 0.2);
-  border-color: rgba(143, 179, 255, 0.35);
-  transform: translateX(3px);
+  background: linear-gradient(180deg, #4f91ff, #2d66df);
+  border-color: rgba(107, 161, 255, 0.9);
+  box-shadow: 0 12px 22px rgba(79, 145, 255, 0.2);
 }
 
 .sidebar-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.12);
+  margin-top: 24px;
+  background: rgba(143, 179, 255, 0.24);
 }
 
 .logout-button {
@@ -130,10 +150,10 @@
   position: absolute;
   inset: 0;
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 82px),
-    linear-gradient(135deg, rgba(143, 179, 255, 0.32), transparent 36%),
-    linear-gradient(315deg, rgba(124, 166, 202, 0.18), transparent 34%);
-  opacity: 0.7;
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 82px),
+    linear-gradient(135deg, rgba(79, 145, 255, 0.22), transparent 36%),
+    linear-gradient(315deg, rgba(7, 18, 37, 0.42), transparent 34%);
+  opacity: 0.9;
   pointer-events: none;
 }
 
@@ -275,8 +295,21 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border: 1px solid rgba(143, 179, 255, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(143, 179, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, rgba(19, 40, 81, 0.94), rgba(9, 24, 52, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.24),
+    0 18px 42px rgba(0, 0, 0, 0.28);
+}
+
+.ticket-card:hover {
+  border-color: rgba(143, 179, 255, 0.32);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 34%),
+    linear-gradient(180deg, rgba(25, 55, 105, 0.96), rgba(11, 29, 62, 0.98));
 }
 
 .ticket-card.sla-warning {
@@ -696,6 +729,11 @@
   .ticket-sidebar {
     position: static;
     min-height: auto;
+  }
+
+  .sidebar-links,
+  .sidebar-modes {
+    margin-top: 0;
   }
 
   .ticket-hero {
