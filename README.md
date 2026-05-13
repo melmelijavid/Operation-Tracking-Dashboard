@@ -1,55 +1,179 @@
 # Operation Tracking Dashboard
 
-React + Vite frontend with a Node.js, Express, and PostgreSQL backend.
+A fullstack incident/ticket management dashboard. React frontend, Express + Postgres backend, JWT auth.
 
-## Main Pages
+## Repo Layout
 
-- `/` home entry page
-- `/login` login and signup page
-- `/welcome` welcome page with quick links
-- `/dashboard` ticket dashboard
-- `/tickets` ticket management
-- `/tickets/:id` ticket detail with SLA, history, and work notes
-- `/statistics` analytics charts
-- `/users` admin-only user management
-
-## Run Frontend
-
-```bash
-npm install
-npm run dev
+```
+client/     # React + Vite frontend
+server/     # Express + Postgres backend
 ```
 
-## Run Backend
+Each app has its own `package.json` and its own `.env`. Never combine them — Vite inlines client env vars into the public bundle, so server secrets must stay in `server/.env`.
+
+## Prerequisites
+
+- Node.js 18+ (project tested on 20 and 22)
+- PostgreSQL 14+ running locally
+- `psql` on PATH (used by the seed script)
+
+## First-Time Setup
+
+### 1. Create the database
+
+```bash
+createdb operation_tracking_dashboard
+```
+
+(Or via `psql`: `CREATE DATABASE operation_tracking_dashboard;`)
+
+### 2. Configure the backend
 
 ```bash
 cd server
+cp .env.example .env
 npm install
-npm run dev
 ```
 
-## Recreate Demo Database
+Open `server/.env` and fill in the values. The most important one is `JWT_SECRET` — the server **refuses to boot** without a real secret. Generate one with:
 
-Run this after pulling new changes if the database needs the same demo users and tickets:
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+Paste the output as the value of `JWT_SECRET`. Confirm `DATABASE_URL` matches your Postgres setup and `CORS_ORIGIN` matches the URL Vite serves on (default `http://localhost:5173`).
+
+### 3. Apply migrations and seed the database
+
+From inside `server/`:
 
 ```bash
 npm run seed
 ```
 
-Or from inside the server folder:
+This runs all pending migrations (via `node-pg-migrate`) and then loads demo data. The schema lives in `server/migrations/`; every change goes into a new file there. Migrations are tracked in a `pgmigrations` table, so re-running is safe — already-applied migrations are skipped.
+
+To run migrations without reseeding the data:
 
 ```bash
-cd server
-npm run seed
+npm run migrate:up
 ```
 
-The seed script recreates the schema, clears old demo data, and inserts demo users, 200 tickets, SLA values, history, and work notes.
+To create a new migration file:
 
-Main demo logins:
+```bash
+npm run migrate:create -- add-user-verified-flag
+```
 
-- `admin@nokia.com` / `admin1234`
-- `cevher@nokia.com` / `cevher1234`
-- `vlad@nokia.com` / `vlad1234`
-- `viewer@example.com` / `viewer1234`
+The seed creates three demo accounts:
 
-Important: `npm run seed` resets the database tables. Do not run it against production data.
+| Email | Password | Role |
+|---|---|---|
+| admin@nokia.com | admin1234 | admin |
+| operator@nokia.com | operator1234 | operator |
+| viewer@nokia.com | viewer1234 | viewer |
+
+### 4. (Optional) Configure email delivery
+
+The signup flow sends a 6-digit verification code via email. By default, with no SMTP settings, the server uses [Ethereal](https://ethereal.email/) — a fake-inbox service that gives you a preview URL printed to the console for every email sent. That's enough to develop and test the verification flow end-to-end without setting up real email delivery.
+
+To send to **real inboxes** (e.g. for a demo to your team), set the SMTP variables in `server/.env`. A common choice for personal testing is Gmail with an [app password](https://support.google.com/mail/answer/185833):
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your.address@gmail.com
+SMTP_PASS=<16-character app password, NOT your Gmail password>
+EMAIL_FROM="Operation Tracking <your.address@gmail.com>"
+```
+
+For production, use a transactional email service (SendGrid, Mailgun, AWS SES, Resend) — same SMTP vars, different host.
+
+### 5. Configure the frontend
+
+```bash
+cd ../client
+cp .env.example .env
+npm install
+```
+
+The default `VITE_API_URL=/api` works with the Vite dev proxy — no edits needed unless you change the backend port.
+
+## Running
+
+Two processes, two terminals.
+
+```bash
+# Terminal 1 — backend
+cd server
+npm run dev          # nodemon, watches server/src
+```
+
+```bash
+# Terminal 2 — frontend
+cd client
+npm run dev          # Vite, default http://localhost:5173
+```
+
+Vite's dev server proxies `/api/*` to `http://localhost:3001`, so the frontend code only ever talks to `/api/...`.
+
+Visit `http://localhost:5173` and log in with one of the demo accounts.
+
+## Common Tasks
+
+**Reset the data** (truncates tickets and users, re-applies any pending migrations, reloads demo content):
+
+```bash
+cd server && npm run seed
+```
+
+**Apply schema changes only** (no data reset):
+
+```bash
+cd server && npm run migrate:up
+```
+
+**Rotate the JWT secret**: change `JWT_SECRET` in `server/.env` and restart the backend. All existing logins are invalidated — every user has to sign in again.
+
+**Production build of the client**:
+
+```bash
+cd client && npm run build
+# Output in client/dist/
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Server exits on boot with `JWT_SECRET is set to a known placeholder value` | You haven't generated a real secret yet — see step 2 above. |
+| `column t.<x> does not exist` after pulling new code | Pending migration. Run `npm run migrate:up` in `server/`. |
+| CORS error in the browser console | `CORS_ORIGIN` in `server/.env` doesn't match the URL Vite is serving on. |
+| 401s after restarting the backend | You changed `JWT_SECRET`. Log out and log in again. |
+
+## API Surface
+
+All `/api/*` routes except `/api/health` and `/api/auth/*` require a `Bearer` token.
+
+```
+GET    /api/health
+POST   /api/auth/signup
+POST   /api/auth/login
+POST   /api/auth/logout
+POST   /api/auth/verify-email
+POST   /api/auth/resend-verification
+GET    /api/auth/me
+
+GET    /api/tickets
+POST   /api/tickets                 (admin, operator)
+PUT    /api/tickets/:id             (admin, operator — operators limited to own/assigned)
+DELETE /api/tickets/:id             (admin, operator — operators limited to own)
+GET    /api/tickets/:id
+GET    /api/tickets/:id/history
+GET    /api/tickets/:id/comments
+POST   /api/tickets/:id/comments    (admin, operator)
+DELETE /api/tickets/:id/comments/:commentId
+
+GET    /api/users
+PATCH  /api/users/:id/role          (admin)
+```

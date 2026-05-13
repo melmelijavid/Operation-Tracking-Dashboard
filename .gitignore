@@ -1,12 +1,13 @@
 # Dependencies
-node_modules/
+client/node_modules/
 server/node_modules/
 
 # Build output
-dist/
+client/dist/
+client/.vite/
 
-# Environment variables
-.env
+# Environment variables (commit only the .env.example files)
+client/.env
 server/.env
 
 # Claude Code

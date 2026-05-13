@@ -9,6 +9,8 @@ export function mapTicketRow(row) {
     status: row.status,
     priority: row.priority,
     assignedGroup: row.assigned_group,
+    teamId: row.team_id || null,
+    teamName: row.team_name || '',
     serviceType: row.service_type,
     submitDate: row.submit_date,
     lastModifiedDate: row.last_modified_date || '',
