@@ -4,6 +4,7 @@ import '../styles/dashboard.css';
 import { useAuth } from '../auth';
 import { fetchTickets, getDashboardTicketsForRole } from '../utils/tickets';
 import { fetchTeams } from '../utils/teams';
+import PaginationButtons from '../components/PaginationButtons';
 
 const TICKETS_PER_PAGE = 20;
 
@@ -103,7 +104,6 @@ export default function DashboardPage() {
   const pageStart = (currentPage - 1) * TICKETS_PER_PAGE;
   const pageEnd = pageStart + TICKETS_PER_PAGE;
   const visibleTickets = filteredTickets.slice(pageStart, pageEnd);
-  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -272,17 +272,12 @@ export default function DashboardPage() {
                   >
                     Previous
                   </button>
-                  {pageNumbers.map((pageNumber) => (
-                    <button
-                      type="button"
-                      key={pageNumber}
-                      className={currentPage === pageNumber ? 'pagination-button active' : 'pagination-button'}
-                      aria-current={currentPage === pageNumber ? 'page' : undefined}
-                      onClick={() => setCurrentPage(pageNumber)}
-                    >
-                      {pageNumber}
-                    </button>
-                  ))}
+                  <PaginationButtons
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    buttonClassName="pagination-button"
+                  />
                   <button
                     type="button"
                     className="pagination-button"

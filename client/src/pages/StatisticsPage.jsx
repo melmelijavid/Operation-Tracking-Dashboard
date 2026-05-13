@@ -23,7 +23,7 @@ const CHARTS = [
   },
 ];
 
-function getWeekKey(dateStr) {
+function getWeekInfo(dateStr) {
   if (!dateStr) return null;
   const d = new Date(`${dateStr}T12:00:00`);
   if (isNaN(d.getTime())) return null;
@@ -31,7 +31,11 @@ function getWeekKey(dateStr) {
   d.setDate(d.getDate() + 4 - dow);
   const jan1 = new Date(d.getFullYear(), 0, 1);
   const weekNum = Math.ceil(((d - jan1) / 86400000 + 1) / 7);
-  return `W${weekNum}\n${d.getFullYear()}`;
+  const year = d.getFullYear();
+  return {
+    label: `W${weekNum}\n${year}`,
+    sortKey: year * 100 + weekNum,
+  };
 }
 
 function getTicketSlaState(ticket) {
@@ -79,11 +83,13 @@ export default function StatisticsPage() {
   const weeklyData = useMemo(() => {
     const weeks = {};
     tickets.forEach((t) => {
-      const key = getWeekKey(t.submitDate);
-      if (!key) return;
+      const weekInfo = getWeekInfo(t.submitDate);
+      if (!weekInfo) return;
+      const key = weekInfo.label;
       if (!weeks[key]) {
         weeks[key] = {
           label: key,
+          sortKey: weekInfo.sortKey,
           total: 0,
           values: { Critical: 0, High: 0, Medium: 0, Low: 0 },
           statusValues: { Open: 0, 'In Progress': 0, Pending: 0, Resolved: 0, Closed: 0 },
@@ -95,7 +101,7 @@ export default function StatisticsPage() {
       if (weeks[key].statusValues[t.status] !== undefined) weeks[key].statusValues[t.status]++;
       weeks[key].slaValues[getTicketSlaState(t)]++;
     });
-    return Object.values(weeks).sort((a, b) => a.label.localeCompare(b.label));
+    return Object.values(weeks).sort((a, b) => a.sortKey - b.sortKey);
   }, [tickets]);
 
   const serviceData = useMemo(() => {

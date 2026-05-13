@@ -5,6 +5,7 @@ import { AUTH_ROLES, useAuth } from '../auth';
 import { createTicket, deleteTicket, fetchTickets, updateTicket } from '../utils/tickets';
 import { fetchUsers } from '../utils/users';
 import { fetchTeams } from '../utils/teams';
+import PaginationButtons from '../components/PaginationButtons';
 
 const TICKETS_PER_PAGE = 6;
 
@@ -214,7 +215,6 @@ export default function TicketManagementPage() {
   const pageStart = (currentPage - 1) * TICKETS_PER_PAGE;
   const pageEnd = pageStart + TICKETS_PER_PAGE;
   const visibleTickets = filteredTickets.slice(pageStart, pageEnd);
-  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -542,17 +542,12 @@ export default function TicketManagementPage() {
                   >
                     Previous
                   </button>
-                  {pageNumbers.map((pageNumber) => (
-                    <button
-                      type="button"
-                      key={pageNumber}
-                      className={currentPage === pageNumber ? 'ticket-page-button active' : 'ticket-page-button'}
-                      aria-current={currentPage === pageNumber ? 'page' : undefined}
-                      onClick={() => setCurrentPage(pageNumber)}
-                    >
-                      {pageNumber}
-                    </button>
-                  ))}
+                  <PaginationButtons
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    buttonClassName="ticket-page-button"
+                  />
                   <button
                     type="button"
                     className="ticket-page-button"

@@ -998,6 +998,16 @@ tbody td {
   opacity: 0.45;
 }
 
+.pagination-button.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  color: #c9cac4;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
 @media (max-width: 1120px) {
   .dashboard-shell {
     grid-template-columns: 1fr;

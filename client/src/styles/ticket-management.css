@@ -588,6 +588,16 @@
   opacity: 0.45;
 }
 
+.ticket-page-button.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  color: #c9d6f5;
+  background: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
 @keyframes ticket-warning-border {
   0%, 100% {
     border-color: rgba(255, 209, 102, 0.24);

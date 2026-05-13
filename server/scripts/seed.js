@@ -109,25 +109,51 @@ const generatedCatalog = [
 const generatedPriorities = ['Low', 'Medium', 'Medium', 'High', 'Critical', 'High', 'Medium', 'Low'];
 const generatedOwners = ['cevher', 'vlad', 'melika', 'alex', 'sara', 'admin'];
 const generatedAssignees = ['vlad', 'cevher', 'alex', 'melika', 'sara', 'cevher'];
+const generatedWeeklyCounts = {
+  1: 4,
+  2: 9,
+  3: 3,
+  4: 7,
+  5: 2,
+  6: 10,
+  7: 5,
+  8: 8,
+  9: 1,
+  10: 6,
+  11: 10,
+  12: 4,
+  13: 7,
+  14: 2,
+  15: 9,
+  16: 5,
+  17: 8,
+};
+
+function getGeneratedStatus(week, slot, count) {
+  if (count === 1) return week % 3 === 0 ? 'Open' : 'Resolved';
+  if (slot === count - 1 && week % 4 === 0) return 'Open';
+  if (slot === count - 1 && week % 5 === 0) return 'Pending';
+  if (slot === count - 2 && week % 3 === 0) return 'In Progress';
+  if (slot === 1 || (slot === 4 && count > 6)) return 'Closed';
+  return 'Resolved';
+}
 
 function buildGeneratedTicketTemplates() {
   const templates = [];
   const firstWeekDate = new Date('2026-01-01T09:00:00+03:00');
 
   for (let week = 1; week <= 17; week++) {
-    for (let slot = 0; slot < 10; slot++) {
-      const index = (week - 1) * 10 + slot;
-      const catalog = generatedCatalog[index % generatedCatalog.length];
-      const priority = generatedPriorities[index % generatedPriorities.length];
-      const submitDate = new Date(firstWeekDate);
-      submitDate.setDate(firstWeekDate.getDate() + (week - 1) * 7 + Math.floor(slot / 2));
-      submitDate.setHours(9 + (slot % 7), slot % 2 === 0 ? 10 : 40, 0, 0);
+    const ticketsInWeek = generatedWeeklyCounts[week] || 5;
 
-      let status = 'Resolved';
-      if (slot === 1 || slot === 6) status = 'Closed';
-      if (slot === 8) status = 'Open';
-      if (slot === 9 && week % 2 === 0) status = 'Pending';
-      if (slot === 9 && week % 2 !== 0) status = 'In Progress';
+    for (let slot = 0; slot < ticketsInWeek; slot++) {
+      const index = templates.length;
+      const catalog = generatedCatalog[index % generatedCatalog.length];
+      const priority = generatedPriorities[(index + week + slot) % generatedPriorities.length];
+      const submitDate = new Date(firstWeekDate);
+      submitDate.setDate(firstWeekDate.getDate() + (week - 1) * 7 + ((slot * 2 + week) % 6));
+      submitDate.setHours(8 + ((slot + week) % 9), slot % 2 === 0 ? 10 : 40, 0, 0);
+
+      const status = getGeneratedStatus(week, slot, ticketsInWeek);
 
       templates.push([
         `${generatedDescriptions[index % generatedDescriptions.length]} - Week ${week}`,
