@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../auth';
-import { updateAdminUser } from '../../utils/admin';
+import { resetAdminUserPassword, updateAdminUser } from '../../utils/admin';
 
 const ROLE_OPTIONS = ['admin', 'operator', 'viewer'];
 const STATUS_OPTIONS = ['active', 'disabled'];
@@ -17,7 +17,9 @@ export default function EditUserModal({ user, teams, onClose, onSaved }) {
   const [status, setStatus] = useState(initialStatus);
   const [teamIds, setTeamIds] = useState(user.teams.map((t) => t.id));
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   // Close on Escape.
   useEffect(() => {
@@ -37,6 +39,7 @@ export default function EditUserModal({ user, teams, onClose, onSaved }) {
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
+    setInfo('');
 
     if (!name.trim()) return setError('Name is required.');
     if (!email.trim()) return setError('Email is required.');
@@ -55,6 +58,25 @@ export default function EditUserModal({ user, teams, onClose, onSaved }) {
       setError(err.message || 'Could not save changes.');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleResetPassword() {
+    setError('');
+    setInfo('');
+
+    if (!window.confirm(`Reset password for ${user.email}? They'll receive an email with the new password.`)) {
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const response = await resetAdminUserPassword(user.id);
+      setInfo(response?.message || 'Password reset email sent.');
+    } catch (err) {
+      setError(err.message || 'Could not reset password.');
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -119,8 +141,18 @@ export default function EditUserModal({ user, teams, onClose, onSaved }) {
           </fieldset>
 
           {error && <p className="admin-error" role="alert">{error}</p>}
+          {info && <p className="admin-info" role="status">{info}</p>}
 
           <div className="modal-actions">
+            <button
+              type="button"
+              className="btn-secondary btn-danger-outline"
+              onClick={handleResetPassword}
+              disabled={submitting || resetting}
+            >
+              {resetting ? 'Sending…' : 'Reset password'}
+            </button>
+            <div className="modal-actions-spacer" />
             <button type="button" className="btn-secondary" onClick={onClose} disabled={submitting}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={submitting}>
               {submitting ? 'Saving…' : 'Save changes'}

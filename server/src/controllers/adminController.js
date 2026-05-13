@@ -1,7 +1,15 @@
+import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import { pool, query } from '../db.js';
+import { sendEmail } from '../utils/email.js';
 
 const VALID_ROLES = ['admin', 'operator', 'viewer'];
 const VALID_STATUSES = ['active', 'disabled'];
+
+// Random base64url string. 9 bytes → 12 chars, no padding, URL-safe alphabet.
+function generateTempPassword() {
+  return crypto.randomBytes(9).toString('base64url');
+}
 
 // "Effective" status surfaced to the admin UI:
 //   - 'disabled'  if users.status = 'disabled'
@@ -188,4 +196,44 @@ export async function updateUser(req, res) {
 
   const updated = await fetchUser(userId);
   return res.json(updated);
+}
+
+/**
+ * Generates a fresh random password for the target user, writes the hash,
+ * and emails the plaintext to the user. The admin never sees the password —
+ * it leaves the server boundary only via SMTP to the user's inbox.
+ */
+export async function resetUserPassword(req, res) {
+  const userId = Number(req.params.id);
+  if (!Number.isInteger(userId)) {
+    throw httpError(400, 'Invalid user id.');
+  }
+
+  const userResult = await query(
+    'SELECT id, name, email FROM users WHERE id = $1',
+    [userId]
+  );
+  if (userResult.rowCount === 0) {
+    throw httpError(404, 'User not found.');
+  }
+  const user = userResult.rows[0];
+
+  const newPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+
+  await sendEmail({
+    to: user.email,
+    subject: 'Your Operation Tracking password has been reset',
+    text: `Hi ${user.name},\n\nAn administrator reset your password.\n\nNew password: ${newPassword}\n\nLog in at any time. We recommend changing it once you do.`,
+    html: `
+      <p>Hi ${user.name},</p>
+      <p>An administrator reset your password.</p>
+      <p>New password: <code style="font-size:16px;background:#f3f4f6;padding:4px 8px;border-radius:4px;">${newPassword}</code></p>
+      <p>Log in at any time. We recommend changing it once you do.</p>
+    `,
+  });
+
+  return res.json({ message: `Password reset email sent to ${user.email}.` });
 }

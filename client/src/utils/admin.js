@@ -10,3 +10,9 @@ export async function updateAdminUser(userId, payload) {
     body: JSON.stringify(payload),
   });
 }
+
+export async function resetAdminUserPassword(userId) {
+  return apiRequest(`/admin/users/${encodeURIComponent(userId)}/reset-password`, {
+    method: 'POST',
+  });
+}

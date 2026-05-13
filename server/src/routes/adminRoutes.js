@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listUsers, updateUser } from '../controllers/adminController.js';
+import { listUsers, resetUserPassword, updateUser } from '../controllers/adminController.js';
 import { authenticateToken, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = Router();
@@ -10,5 +10,6 @@ router.use(authorizeRoles('admin'));
 
 router.get('/users', listUsers);
 router.patch('/users/:id', updateUser);
+router.post('/users/:id/reset-password', resetUserPassword);
 
 export default router;
