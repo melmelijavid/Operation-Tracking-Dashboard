@@ -16,3 +16,7 @@ export async function resetAdminUserPassword(userId) {
     method: 'POST',
   });
 }
+
+export async function fetchAdminTeams() {
+  return apiRequest('/admin/teams');
+}

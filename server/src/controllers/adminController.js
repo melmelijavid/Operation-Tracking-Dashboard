@@ -226,6 +226,78 @@ export async function updateUser(req, res) {
   return res.json(updated);
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// Team Management
+// ──────────────────────────────────────────────────────────────────────
+
+function mapTeamRow(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description || '',
+    department: row.department || '',
+    status: row.status,
+    createdAt: row.created_at,
+    members: row.members || [],
+    memberCount: (row.members || []).length,
+    ticketCount: Number(row.tickets_total) || 0,
+    activity: {
+      assigned: Number(row.tickets_total) || 0,
+      solved: Number(row.tickets_solved) || 0,
+      overdue: Number(row.tickets_overdue) || 0,
+    },
+  };
+}
+
+const teamSelect = `
+  SELECT
+    team.id,
+    team.name,
+    team.description,
+    team.department,
+    team.status,
+    TO_CHAR(team.created_at, 'YYYY-MM-DD') AS created_at,
+    COALESCE(
+      json_agg(
+        json_build_object('id', mu.id, 'name', mu.name, 'email', mu.email)
+        ORDER BY mu.name
+      ) FILTER (WHERE mu.id IS NOT NULL),
+      '[]'::json
+    ) AS members,
+    COALESCE(tstats.total, 0)   AS tickets_total,
+    COALESCE(tstats.solved, 0)  AS tickets_solved,
+    COALESCE(tstats.overdue, 0) AS tickets_overdue
+  FROM teams team
+  LEFT JOIN team_members mtm ON mtm.team_id = team.id
+  LEFT JOIN users mu ON mu.id = mtm.user_id
+  -- One pass over tickets, grouped by team_id, joined back per team.
+  LEFT JOIN (
+    SELECT
+      team_id,
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE status IN ('Resolved','Closed')) AS solved,
+      COUNT(*) FILTER (
+        WHERE status NOT IN ('Resolved','Closed')
+          AND sla_deadline IS NOT NULL
+          AND sla_deadline < NOW()
+      ) AS overdue
+    FROM tickets
+    WHERE team_id IS NOT NULL
+    GROUP BY team_id
+  ) tstats ON tstats.team_id = team.id
+`;
+
+export async function listTeams(req, res) {
+  const result = await query(
+    `${teamSelect}
+     GROUP BY team.id, tstats.total, tstats.solved, tstats.overdue
+     ORDER BY team.name ASC`
+  );
+  return res.json(result.rows.map(mapTeamRow));
+}
+
+// ──────────────────────────────────────────────────────────────────────
+
 /**
  * Generates a fresh random password for the target user, writes the hash,
  * and emails the plaintext to the user. The admin never sees the password —
