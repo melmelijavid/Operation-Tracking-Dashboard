@@ -33,6 +33,12 @@ function mapUserRow(row) {
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at,
     teams: row.teams || [],
+    activity: {
+      // Counts come back from COUNT(*) as strings (bigint); coerce to Number.
+      assigned: Number(row.tickets_assigned) || 0,
+      solved: Number(row.tickets_solved) || 0,
+      overdue: Number(row.tickets_overdue) || 0,
+    },
   };
 }
 
@@ -52,15 +58,35 @@ const userSelect = `
         ORDER BY t.name
       ) FILTER (WHERE t.id IS NOT NULL),
       '[]'::json
-    ) AS teams
+    ) AS teams,
+    COALESCE(stats.assigned, 0) AS tickets_assigned,
+    COALESCE(stats.solved, 0)   AS tickets_solved,
+    COALESCE(stats.overdue, 0)  AS tickets_overdue
   FROM users u
   LEFT JOIN team_members tm ON tm.user_id = u.id
   LEFT JOIN teams t ON t.id = tm.team_id
+  -- One scan of tickets, grouped by assignee, joined back to each user.
+  -- "assigned" counts all tickets where the user is the assignee, regardless
+  -- of status. "overdue" excludes Resolved/Closed even if past deadline.
+  LEFT JOIN (
+    SELECT
+      assigned_person_user_id,
+      COUNT(*) AS assigned,
+      COUNT(*) FILTER (WHERE status IN ('Resolved', 'Closed')) AS solved,
+      COUNT(*) FILTER (
+        WHERE status NOT IN ('Resolved', 'Closed')
+          AND sla_deadline IS NOT NULL
+          AND sla_deadline < NOW()
+      ) AS overdue
+    FROM tickets
+    WHERE assigned_person_user_id IS NOT NULL
+    GROUP BY assigned_person_user_id
+  ) stats ON stats.assigned_person_user_id = u.id
 `;
 
 async function fetchUser(userId, executor = { query }) {
   const result = await executor.query(
-    `${userSelect} WHERE u.id = $1 GROUP BY u.id`,
+    `${userSelect} WHERE u.id = $1 GROUP BY u.id, stats.assigned, stats.solved, stats.overdue`,
     [userId]
   );
   return result.rows[0] ? mapUserRow(result.rows[0]) : null;
@@ -70,7 +96,9 @@ export async function listUsers(req, res) {
   // One row per user with team memberships aggregated into a JSON array.
   // The FILTER inside json_agg drops the synthetic NULL row produced by
   // LEFT JOIN when the user has no team memberships.
-  const result = await query(`${userSelect} GROUP BY u.id ORDER BY u.name ASC`);
+  const result = await query(
+    `${userSelect} GROUP BY u.id, stats.assigned, stats.solved, stats.overdue ORDER BY u.name ASC`
+  );
   return res.json(result.rows.map(mapUserRow));
 }
 

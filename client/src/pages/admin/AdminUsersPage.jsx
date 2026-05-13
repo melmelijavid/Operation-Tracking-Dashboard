@@ -95,6 +95,7 @@ export default function AdminUsersPage() {
                 <th>Role</th>
                 <th>Status</th>
                 <th>Teams</th>
+                <th>Activity</th>
                 <th>Last login</th>
                 <th>Created</th>
                 <th></th>
@@ -103,7 +104,7 @@ export default function AdminUsersPage() {
             <tbody>
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="admin-empty">No users match these filters.</td>
+                  <td colSpan={9} className="admin-empty">No users match these filters.</td>
                 </tr>
               ) : (
                 filteredUsers.map((u) => (
@@ -122,6 +123,22 @@ export default function AdminUsersPage() {
                           ))}
                         </div>
                       )}
+                    </td>
+                    <td>
+                      <div className="admin-activity">
+                        <span className="activity-pill assigned" title="Tickets assigned to this user">
+                          <span className="activity-label">Assigned</span>
+                          <span className="activity-num">{u.activity.assigned}</span>
+                        </span>
+                        <span className="activity-pill solved" title="Tickets resolved or closed">
+                          <span className="activity-label">Solved</span>
+                          <span className="activity-num">{u.activity.solved}</span>
+                        </span>
+                        <span className="activity-pill overdue" title="Open tickets past their SLA deadline">
+                          <span className="activity-label">Overdue</span>
+                          <span className="activity-num">{u.activity.overdue}</span>
+                        </span>
+                      </div>
                     </td>
                     <td>{formatLastLogin(u.lastLoginAt)}</td>
                     <td>{u.createdAt}</td>
