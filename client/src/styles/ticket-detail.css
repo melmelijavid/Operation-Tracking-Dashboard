@@ -204,26 +204,16 @@
     0 16px 32px rgba(79,145,255,0.32);
 }
 
-.ticket-detail-grid {
-  display: grid;
-
-  grid-template-columns:
-    minmax(320px, 1fr)
-    minmax(320px, 1fr);
-
-  gap: 20px;
-
-  align-items: start;
-}
-
+.ticket-detail-grid,
+.ticket-detail-content-row,
 .ticket-detail-notes-row {
   display: grid;
 
   grid-template-columns:
-    minmax(320px, 0.9fr)
-    minmax(380px, 1.1fr);
+    minmax(320px, 1fr)
+    minmax(380px, 1fr);
 
-  gap: 10px;
+  gap: 20px;
 
   align-items: start;
 }
@@ -234,6 +224,39 @@
 
 .ticket-detail-panel {
   padding: 20px;
+}
+
+.ticket-site-heading {
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.sla-panel-compact {
+  flex: 0 1 680px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.sla-panel-compact .detail-section-heading {
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+
+.sla-panel-compact .detail-definition-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sla-panel-compact .detail-definition-grid div {
+  min-height: 66px;
+  padding: 11px 14px;
+}
+
+.ticket-site-panel .site-map-mini {
+  height: 390px;
 }
 
 .history-panel {
@@ -317,6 +340,10 @@
 
 .sla-panel .detail-definition-grid {
   grid-template-columns: 1fr;
+}
+
+.sla-panel-compact .detail-definition-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .ownership-panel .detail-definition-grid {

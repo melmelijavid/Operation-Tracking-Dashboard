@@ -493,7 +493,49 @@ export default function TicketDetailPage() {
   </div>
 
 </section>
-          <section className="ticket-detail-grid">
+          <section className="ticket-detail-panel ticket-site-panel">
+            <div className="detail-section-heading ticket-site-heading">
+              <div>
+                <h2>Infrastructure Site</h2>
+                <p className="detail-muted">
+                  {ticketSite
+                    ? `${ticketSite.siteId} - ${ticketSite.city}, ${ticketSite.country}`
+                    : 'No site location found for this ticket.'}
+                </p>
+              </div>
+              <div className="sla-panel sla-panel-compact">
+                <dl className="detail-definition-grid">
+                  <div>
+                    <dt>SLA</dt>
+                    <dd>
+                      <span className={`sla-badge sla-${ticket.slaUrgency || 'none'}`}>
+                        {displayValue(ticket.slaRemainingLabel)}
+                      </span>
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt>SLA Type</dt>
+                    <dd>{ticket.slaType === 'business' ? 'Business Hours' : 'Normal Hours'}</dd>
+                  </div>
+
+                  <div>
+                    <dt>SLA Hours</dt>
+                    <dd>{displayValue(ticket.slaHours)}</dd>
+                  </div>
+
+                  <div>
+                    <dt>Deadline</dt>
+                    <dd>{formatDateTime(ticket.slaDeadline)}</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+            <SiteMap sites={ticketSite ? [ticketSite] : []} ticket={ticket} mode="mini" />
+          </section>
+
+          <section className="ticket-detail-content-row">
+
   <div className="ticket-detail-panel ownership-panel">
     <div className="detail-section-heading">
       <h2>Ownership</h2>
@@ -508,78 +550,6 @@ export default function TicketDetailPage() {
       <div><dt>Service Type</dt><dd>{displayValue(ticket.serviceType)}</dd></div>
       <div><dt>Last Modified</dt><dd>{formatDate(ticket.lastModifiedDate)}</dd></div>
     </dl>
-  </div>
-
-  <div className="ticket-detail-panel sla-panel">
-    <div className="detail-section-heading">
-      <h2>SLA</h2>
-
-      <span className={`sla-badge sla-${ticket.slaUrgency || 'none'}`}>
-        {displayValue(ticket.slaRemainingLabel)}
-      </span>
-    </div>
-
-    <dl className="detail-definition-grid">
-      <div>
-        <dt>SLA Type</dt>
-        <dd>{ticket.slaType === 'business' ? 'Business Hours' : 'Normal Hours'}</dd>
-      </div>
-
-      <div>
-        <dt>SLA Hours</dt>
-        <dd>{displayValue(ticket.slaHours)}</dd>
-      </div>
-
-      <div>
-        <dt>Deadline</dt>
-        <dd>{formatDateTime(ticket.slaDeadline)}</dd>
-      </div>
-    </dl>
-  </div>
-</section>
-
-          <section className="ticket-detail-panel ticket-site-panel">
-            <div className="detail-section-heading">
-              <div>
-                <h2>Infrastructure Site</h2>
-                <p className="detail-muted">
-                  {ticketSite
-                    ? `${ticketSite.siteId} - ${ticketSite.city}, ${ticketSite.country}`
-                    : 'No site location found for this ticket.'}
-                </p>
-              </div>
-            </div>
-            <SiteMap sites={ticketSite ? [ticketSite] : []} ticket={ticket} mode="mini" />
-          </section>
-
-<section className="ticket-detail-notes-row">
-
-  <div className="ticket-detail-panel history-panel">
-    <div className="detail-section-heading">
-      <h2>History</h2>
-    </div>
-
-    <div className="history-list">
-      {history.length === 0 ? (
-        <p className="detail-muted">
-          No history yet. New changes will appear here.
-        </p>
-      ) : (
-        history.map((entry) => (
-          <article className="history-item" key={entry.id}>
-            <span></span>
-
-            <div>
-              <strong>{getHistoryText(entry)}</strong>
-
-              <p>
-                {entry.userName} - {formatDateTime(entry.createdAt)}
-              </p>
-            </div>
-          </article>
-        ))
-      )}
-    </div>
   </div>
 
   <div className="ticket-detail-panel work-notes-panel">
@@ -664,6 +634,34 @@ export default function TicketDetailPage() {
                   ))
                 )}
               </div>
+            </div>
+          </section>
+
+          <section className="ticket-detail-panel history-panel">
+            <div className="detail-section-heading">
+              <h2>History</h2>
+            </div>
+
+            <div className="history-list">
+              {history.length === 0 ? (
+                <p className="detail-muted">
+                  No history yet. New changes will appear here.
+                </p>
+              ) : (
+                history.map((entry) => (
+                  <article className="history-item" key={entry.id}>
+                    <span></span>
+
+                    <div>
+                      <strong>{getHistoryText(entry)}</strong>
+
+                      <p>
+                        {entry.userName} - {formatDateTime(entry.createdAt)}
+                      </p>
+                    </div>
+                  </article>
+                ))
+              )}
             </div>
           </section>
         </main>
