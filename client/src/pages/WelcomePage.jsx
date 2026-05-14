@@ -111,7 +111,7 @@ export default function WelcomePage() {
         </div>
 
         <div className="center">
-          <input type="text" placeholder="Search..." className="search" />
+          
 
           <div className="time-pill">
             <span>{time}</span>

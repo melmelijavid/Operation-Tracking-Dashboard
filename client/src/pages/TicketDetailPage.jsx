@@ -438,84 +438,132 @@ export default function TicketDetailPage() {
         </aside>
 
         <main className="ticket-detail-main">
-          <section className="ticket-detail-hero">
-            <div>
-              <Link className="detail-back-link" to="/dashboard">Back to Dashboard</Link>
-              <p className="ticket-detail-kicker">Incident Detail</p>
-              <h1>{ticket.id}</h1>
-              <p>{ticket.description}</p>
-            </div>
+         <section className="ticket-detail-hero">
 
-            <div className="ticket-detail-badges">
-              <span className={`status-badge ${getStatusClass(ticket.status)}`}>{ticket.status}</span>
-              <span className={`priority-pill ${getPriorityClass(ticket.priority)}`}>
-                <span className={`priority-dot ${getPriorityClass(ticket.priority)}`}></span>
-                {ticket.priority}
-              </span>
-              {canEditTicket && (
-                <button type="button" className="detail-edit-button" onClick={openEditTicketModal}>
-                  Edit Ticket
-                </button>
-              )}
-            </div>
-          </section>
+  <div className="ticket-hero-content">
 
+    <p className="ticket-detail-kicker">
+      Incident Detail
+    </p>
+
+    <h1>{ticket.id}</h1>
+
+    <p className="ticket-hero-description">
+      {ticket.description}
+    </p>
+
+    <div className="ticket-hero-actions">
+
+      {canEditTicket && (
+        <button
+          type="button"
+          className="detail-edit-button"
+          onClick={openEditTicketModal}
+        >
+          Edit Ticket
+        </button>
+      )}
+
+      <span className={`status-badge ${getStatusClass(ticket.status)}`}>
+        {ticket.status}
+      </span>
+
+      <span className={`priority-pill ${getPriorityClass(ticket.priority)}`}>
+        <span className={`priority-dot ${getPriorityClass(ticket.priority)}`}></span>
+        {ticket.priority}
+      </span>
+
+      <Link
+        className="detail-back-link hero-back-button"
+        to="/dashboard"
+      >
+        Back to Dashboard
+      </Link>
+
+    </div>
+  </div>
+
+</section>
           <section className="ticket-detail-grid">
-            <div className="ticket-detail-panel ownership-panel">
-              <div className="detail-section-heading">
-                <h2>Ownership</h2>
-              </div>
-              <dl className="detail-definition-grid">
-                <div><dt>Owner</dt><dd>{displayValue(ticket.Owner)}</dd></div>
-                <div><dt>Assigned Person</dt><dd>{displayValue(ticket.Assigned_Person)}</dd></div>
-                <div><dt>Assigned Group</dt><dd>{displayValue(ticket.assignedGroup)}</dd></div>
-                <div><dt>Company</dt><dd>{displayValue(ticket.company)}</dd></div>
-                <div><dt>Service Type</dt><dd>{displayValue(ticket.serviceType)}</dd></div>
-                <div><dt>Last Modified</dt><dd>{formatDate(ticket.lastModifiedDate)}</dd></div>
-              </dl>
+  <div className="ticket-detail-panel ownership-panel">
+    <div className="detail-section-heading">
+      <h2>Ownership</h2>
+    </div>
+
+    <dl className="detail-definition-grid">
+      <div><dt>Owner</dt><dd>{displayValue(ticket.Owner)}</dd></div>
+      <div><dt>Assigned Person</dt><dd>{displayValue(ticket.Assigned_Person)}</dd></div>
+      <div><dt>Assigned Group</dt><dd>{displayValue(ticket.assignedGroup)}</dd></div>
+      <div><dt>Company</dt><dd>{displayValue(ticket.company)}</dd></div>
+      <div><dt>Service Type</dt><dd>{displayValue(ticket.serviceType)}</dd></div>
+      <div><dt>Last Modified</dt><dd>{formatDate(ticket.lastModifiedDate)}</dd></div>
+    </dl>
+  </div>
+
+  <div className="ticket-detail-panel sla-panel">
+    <div className="detail-section-heading">
+      <h2>SLA</h2>
+
+      <span className={`sla-badge sla-${ticket.slaUrgency || 'none'}`}>
+        {displayValue(ticket.slaRemainingLabel)}
+      </span>
+    </div>
+
+    <dl className="detail-definition-grid">
+      <div>
+        <dt>SLA Type</dt>
+        <dd>{ticket.slaType === 'business' ? 'Business Hours' : 'Normal Hours'}</dd>
+      </div>
+
+      <div>
+        <dt>SLA Hours</dt>
+        <dd>{displayValue(ticket.slaHours)}</dd>
+      </div>
+
+      <div>
+        <dt>Deadline</dt>
+        <dd>{formatDateTime(ticket.slaDeadline)}</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section className="ticket-detail-notes-row">
+
+  <div className="ticket-detail-panel history-panel">
+    <div className="detail-section-heading">
+      <h2>History</h2>
+    </div>
+
+    <div className="history-list">
+      {history.length === 0 ? (
+        <p className="detail-muted">
+          No history yet. New changes will appear here.
+        </p>
+      ) : (
+        history.map((entry) => (
+          <article className="history-item" key={entry.id}>
+            <span></span>
+
+            <div>
+              <strong>{getHistoryText(entry)}</strong>
+
+              <p>
+                {entry.userName} - {formatDateTime(entry.createdAt)}
+              </p>
             </div>
+          </article>
+        ))
+      )}
+    </div>
+  </div>
 
-            <div className="ticket-detail-panel sla-panel">
-              <div className="detail-section-heading">
-                <h2>SLA</h2>
-                <span className={`sla-badge sla-${ticket.slaUrgency || 'none'}`}>{displayValue(ticket.slaRemainingLabel)}</span>
-              </div>
-              <dl className="detail-definition-grid">
-                <div><dt>SLA Type</dt><dd>{ticket.slaType === 'business' ? 'Business Hours' : 'Normal Hours'}</dd></div>
-                <div><dt>SLA Hours</dt><dd>{displayValue(ticket.slaHours)}</dd></div>
-                <div><dt>Deadline</dt><dd>{formatDateTime(ticket.slaDeadline)}</dd></div>
-              </dl>
-            </div>
-
-            <div className="ticket-detail-panel history-panel">
-              <div className="detail-section-heading">
-                <h2>History</h2>
-              </div>
-
-              <div className="history-list">
-                {history.length === 0 ? (
-                  <p className="detail-muted">No history yet. New changes will appear here.</p>
-                ) : (
-                  history.map((entry) => (
-                    <article className="history-item" key={entry.id}>
-                      <span></span>
-                      <div>
-                        <strong>{getHistoryText(entry)}</strong>
-                        <p>{entry.userName} - {formatDateTime(entry.createdAt)}</p>
-                      </div>
-                    </article>
-                  ))
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="ticket-detail-notes-row">
-            <div className="ticket-detail-panel work-notes-panel">
-              <div className="detail-section-heading">
-                <h2 className="ticket-report-heading">Ticket Requests / Reports</h2>
-              </div>
-
+  <div className="ticket-detail-panel work-notes-panel">
+    <div className="detail-section-heading">
+      <h2 className="ticket-report-heading">
+        Ticket Requests / Reports
+      </h2>
+    </div>
               {canComment && (
                 <form className="comment-form" onSubmit={handleCommentSubmit}>
                   <div className="comment-input-wrap" ref={commentInputWrapRef}>

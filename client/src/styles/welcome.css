@@ -50,9 +50,13 @@
 }
 
 .welcome-page .logo {
-  width: 90px;
-  margin-top: -30px;
+   width: 90px;
+  margin-top: -20px!important;
+  margin-right: 40px;
   filter: brightness(0) invert(1) drop-shadow(0 0 5px rgba(143, 179, 255, 0.5));
+}
+.welcome-page .left {
+  padding-top: 70px;
 }
 
 .welcome-page .subtitle {
@@ -141,15 +145,6 @@
   gap: 20px;
 }
 
-.welcome-page .search {
-  width: 100%;
-  padding: 12px 20px;
-  border-radius: 999px;
-  border: none;
-  outline: none;
-  background: linear-gradient(135deg, #dcdde6, #7ca6ca);
-}
-
 .welcome-page .search::placeholder {
   color: #0a1529;
   font-size: 15px;
@@ -214,8 +209,12 @@
 }
 
 .welcome-page .quick-links h3 {
-  font-size: 18px;
+    font-size: 18px;
   letter-spacing: 1px;
+  text-align: center;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15)
 }
 
 .welcome-page .card::before,
@@ -272,15 +271,16 @@
 }
 
 .welcome-page .card {
-  min-height: 95px;
-  padding: 18px 12px;
+   min-height: 70px;
+  padding: 14px 18px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: #fff;
+  font-size: 15px;
 }
 
 .welcome-page .card:hover {
@@ -289,25 +289,29 @@
 }
 
 .welcome-page .card-icon {
-  width: 35px;
-  height: 35px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
+   width: 22px;
+  height: 22px;
+  object-fit: contain; filter: brightness(0) invert(1);
 }
 
 .welcome-page .support {
-  padding: 20px;
+  padding: 18px;
 }
 
 .welcome-page .support h3 {
   margin-bottom: 16px;
+   text-align: center;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  letter-spacing: 0.5px;
 }
 
 .welcome-page .support-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 9px;
   color: #e9eef9;
 }
 
@@ -317,16 +321,23 @@
 
 .welcome-page .chatbot {
   margin-top: 14px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  padding: 10px 16px;
+  width: 100%;
+  padding: 11px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  width: fit-content;
+  font-size: 17px;
+  text-align: center;
 }
-
+.welcome-page .chatbot:hover { 
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
+}
 .welcome-page .comment {
   padding: 10px 0;
 }
