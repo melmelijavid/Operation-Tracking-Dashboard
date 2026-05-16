@@ -1,5 +1,4 @@
 import { query } from '../db.js';
-import { getSlaPresentation } from '../utils/sla.js';
 
 function mapSiteRow(row) {
   return {
@@ -16,21 +15,6 @@ function mapSiteRow(row) {
     description: row.description || '',
     createdAt: row.created_at,
   };
-}
-
-function getSeverityRank(urgency) {
-  if (urgency === 'overdue') return 4;
-  if (urgency === 'danger') return 3;
-  if (urgency === 'warning') return 2;
-  if (urgency === 'normal' || urgency === 'none') return 1;
-  return 0;
-}
-
-function getHighestUrgency(tickets) {
-  return tickets.reduce((current, ticket) => {
-    const urgency = ticket.slaUrgency || getSlaPresentation(ticket).slaUrgency;
-    return getSeverityRank(urgency) > getSeverityRank(current) ? urgency : current;
-  }, 'none');
 }
 
 export async function getSites(req, res) {
@@ -58,6 +42,9 @@ export async function getSite(req, res) {
   return res.json(mapSiteRow(result.rows[0]));
 }
 
+/*
+OLD VERSION:
+
 export async function getSitesWithTicketSummary(req, res) {
   const [siteResult, ticketResult] = await Promise.all([
     query(
@@ -83,6 +70,9 @@ export async function getSitesWithTicketSummary(req, res) {
   const summary = siteResult.rows.map((siteRow) => {
     const site = mapSiteRow(siteRow);
     const relatedTickets = ticketsBySite.get(site.siteId) || [];
+
+    // Small bug in old version:
+    // This only excludes Resolved tickets, but Closed tickets should also be excluded.
     const activeTickets = relatedTickets.filter((ticket) => ticket.status !== 'Resolved');
 
     return {
@@ -99,6 +89,37 @@ export async function getSitesWithTicketSummary(req, res) {
       highestSlaUrgency: getHighestUrgency(activeTickets),
     };
   });
+
+  return res.json(summary);
+}
+*/
+
+export async function getSitesWithTicketSummary(req, res) {
+  const result = await query(`
+    SELECT *
+    FROM get_sites_with_ticket_summary()
+  `);
+
+  const summary = result.rows.map((row) => ({
+    siteId: row.site_id,
+    country: row.country,
+    countryCode: row.country_code,
+    city: row.city,
+    cityCode: row.city_code,
+    latitude: Number(row.latitude),
+    longitude: Number(row.longitude),
+    infrastructureType: row.infrastructure_type,
+    vendor: row.vendor,
+    status: row.status,
+    description: row.description || '',
+    createdAt: row.created_at,
+
+    ticketCount: row.ticket_count,
+    activeTicketCount: row.active_ticket_count,
+    relatedTicketIds: row.related_ticket_ids || [],
+    relatedTickets: row.related_tickets || [],
+    highestSlaUrgency: row.highest_sla_urgency,
+  }));
 
   return res.json(summary);
 }
