@@ -537,3 +537,39 @@
     display: none;
   }
 }
+.welcome-page .time-pill span {
+  position: relative;
+  padding: 0 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.weather-pill img {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+.card-box li {
+  margin-left: 18px;
+  margin-bottom: 10px;
+
+  color: rgba(255,255,255,0.92);
+}
+.welcome-page .fa-circle {
+  color: #4ade80;
+  font-size: 10px;
+}
+.welcome-page .support-dot {
+  width: 5px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(238, 241, 241, 0.5);
+  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.welcome-page .support-dot.online {
+  background: #4ade80;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.8);
+}
