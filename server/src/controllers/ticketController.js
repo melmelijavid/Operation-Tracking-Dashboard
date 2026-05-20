@@ -1,16 +1,9 @@
 import { query } from '../db.js';
 import { sendEmail } from '../utils/email.js';
+import { escapeHtml } from '../utils/html.js';
 import { mapTicketRow } from '../utils/ticketMapper.js';
 import { calculateSlaDeadline, getDefaultSlaForPriority } from '../utils/sla.js';
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+import { notifyUrgentTicketIfNeeded } from '../utils/urgentNotifier.js';
 
 // Notifies @ mentioned users by email. Self-mentions and users who muted
 // notifications are skipped. Failures are logged, not thrown — the comment
@@ -491,6 +484,11 @@ export async function createTicket(req, res) {
 
   void result;
   await addHistoryEntry(id, req.user.id, 'created', 'ticket', null, id);
+
+  // Tickets can be created already-urgent (e.g. a Critical priority gives a
+  // 4-hour SLA). Fire the notification immediately if so.
+  await notifyUrgentTicketIfNeeded(id);
+
   return res.status(201).json(await fetchAllTickets());
 }
 
@@ -540,6 +538,7 @@ export async function updateTicket(req, res) {
       { fieldName: 'Close Date', oldValue: currentTicket.close_date, newValue: closeDateValue },
     ]);
 
+    await notifyUrgentTicketIfNeeded(ticketId);
     return res.json(await fetchAllTickets());
   }
 
@@ -643,6 +642,7 @@ export async function updateTicket(req, res) {
     { fieldName: 'Aging', oldValue: currentTicket.aging, newValue: req.body.aging ?? currentTicket.aging },
   ]);
 
+  await notifyUrgentTicketIfNeeded(ticketId);
   return res.json(await fetchAllTickets());
 }
 
