@@ -14,7 +14,7 @@
 }
 
 .ticket-shell {
-  display: grid;
+   display: grid;
   grid-template-columns: 252px minmax(0, 1fr);
   gap: 18px;
   max-width: 1520px;
@@ -38,16 +38,29 @@
   position: sticky;
   top: 20px;
   min-height: calc(100vh - 40px);
-  border-radius: 8px;
-  padding: 28px 21px;
+
+  padding: 18px 18px;
+
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: linear-gradient(180deg, #132851, #071225);
-  border-color: rgba(143, 179, 255, 0.28);
-  box-shadow: none;
-  backdrop-filter: none;
+
+  border-radius: 24px;
+
+  background: rgba(7, 15, 35, 0.72);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(143, 179, 255, 0.12);
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.28),
+    0 0 20px rgba(40, 90, 200, 0.10);
+
+  overflow: hidden;
 }
+
 
 .ticket-hero,
 .toolbar-panel {
@@ -58,7 +71,11 @@
 .brand-block {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+
+  gap: 4px;
+
+  margin-top: -45px;
+  margin-right: -15px;
 }
 
 .brand-logo {
@@ -83,7 +100,29 @@
 }
 
 .sidebar-links {
-  margin-top: 60px;
+   margin-top: 24px;
+
+  position: relative;
+
+  padding-left: 18px;
+}
+.sidebar-links::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 3px;
+  height: 100%;
+
+  background: rgba(143, 179, 255, 0.18);
+
+  box-shadow:
+    0 0 8px rgba(143, 179, 255, 0.12);
+
+  border-radius: 999px;
 }
 
 .sidebar-modes {
@@ -93,18 +132,29 @@
 .sidebar-links a,
 .mode-button,
 .logout-button {
-  min-height: 38px;
-  border-radius: 6px;
-  padding: 10px 14px;
-  border: 1px solid rgba(143, 179, 255, 0.32);
-  background: rgba(23, 43, 85, 0.64);
+   min-height: 42px;
+
+  border-radius: 999px;
+
+  padding: 12px 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background: rgba(94, 130, 197, 0.08);
+
   color: #f7f7f2;
+
   text-decoration: none;
   text-align: left;
-  font-size: 14px;
-  font-weight: 700;
+
+  font-size: 15px;
+  font-weight: 600;
+
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+  transition: all 0.25s ease;
+
+  backdrop-filter: blur(10px);
 }
 
 .sidebar-links a:hover,
@@ -112,9 +162,14 @@
 .mode-button:hover,
 .mode-button.active,
 .logout-button:hover {
-  background: linear-gradient(180deg, #4f91ff, #2d66df);
-  border-color: rgba(107, 161, 255, 0.9);
-  box-shadow: 0 12px 22px rgba(79, 145, 255, 0.2);
+   background: rgba(255, 255, 255, 0.14);
+
+  border-color: rgba(143, 179, 255, 0.30);
+
+  transform: translateX(5px);
+
+  box-shadow:
+    0 0 18px rgba(95, 155, 255, 0.18)
 }
 
 .sidebar-divider {

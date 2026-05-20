@@ -27,51 +27,111 @@
   position: sticky;
   top: 20px;
   min-height: calc(100vh - 40px);
-  border-radius: 8px;
-  padding: 28px 21px;
+
+  padding: 18px 18px;
+
   display: flex;
   flex-direction: column;
   gap: 0;
-  border: 1px solid rgba(143, 179, 255, 0.28);
-  background: linear-gradient(180deg, #132851, #071225);
-  box-shadow: none;
-  backdrop-filter: none;
+
+  border-radius: 24px;
+
+  background: rgba(7, 15, 35, 0.72);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(143, 179, 255, 0.12);
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.28),
+    0 0 20px rgba(40, 90, 200, 0.10);
+
+  overflow: hidden;
 }
+
 
 .statistics-nav {
   display: flex;
   flex-direction: column;
+
   gap: 14px;
-  margin-top: 60px;
+
+  margin-top: 24px;
+
+  position: relative;
+
+  padding-left: 18px;
+}
+.statistics-nav::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 3px;
+  height: 100%;
+
+  background: rgba(143, 179, 255, 0.18);
+
+  box-shadow:
+    0 0 8px rgba(143, 179, 255, 0.12);
+
+  border-radius: 999px;
 }
 
-.statistics-nav a {
+ .statistics-nav a {
+
   color: #f7f7f2;
+
   text-decoration: none;
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: 1px solid rgba(143, 179, 255, 0.32);
-  background: rgba(23, 43, 85, 0.64);
-  font-size: 14px;
-  font-weight: 700;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+  padding: 12px 16px;
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(143, 179, 255, 0.14);
+
+  background: rgba(10, 20, 45, 0.72);
+
+  font-size: 15px;
+  font-weight: 600;
+
+  transition: all 0.25s ease;
+
+  backdrop-filter: blur(10px);
 }
 
 .statistics-nav a:hover,
 .statistics-nav a.active {
-  background: linear-gradient(180deg, #4f91ff, #2d66df);
-  border-color: rgba(107, 161, 255, 0.9);
-  box-shadow: 0 12px 22px rgba(79, 145, 255, 0.2);
+  background: rgba(30, 55, 110, 0.82);
+
+  border-color: rgba(143, 179, 255, 0.30);
+
+  transform: translateX(5px);
+
+  box-shadow:
+    0 0 18px rgba(95, 155, 255, 0.18);
 }
 
 .statistics-sidebar-status {
   margin-top: auto;
+
   display: grid;
+
   gap: 10px;
+
   padding: 18px 15px;
-  border-radius: 6px;
-  background: rgba(23, 43, 85, 0.76);
-  border: 1px solid rgba(143, 179, 255, 0.38);
+
+  border-radius: 18px;
+
+  background: rgba(10, 20, 45, 0.60);
+
+  border: 1px solid rgba(143, 179, 255, 0.14);
+
+  backdrop-filter: blur(12px);
 }
 
 .statistics-dot {

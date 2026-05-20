@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth';
 import '../styles/welcome.css';
+import { fetchTickets } from '../utils/tickets';
 import { fetchMentionNotifications } from '../utils/users';
 
 function QuickCard({ to, icon, label }) {
@@ -41,6 +42,10 @@ export default function WelcomePage() {
   const [notificationError, setNotificationError] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
+  const [weather, setWeather] = useState(null);
+  const [weatherError, setWeatherError] = useState('');
+  const [holidays, setHolidays] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
   const [seenNotificationIds, setSeenNotificationIds] = useState(() => loadSeenNotificationIds(user));
   const now = new Date();
   const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -60,6 +65,97 @@ export default function WelcomePage() {
 
     loadNotifications();
   }, []);
+
+  useEffect(() => {
+  async function loadWeather() {
+    try {
+      setWeatherError('');
+
+      const response = await fetch(
+        'https://api.openweathermap.org/data/2.5/weather?q=Timisoara,RO&units=metric&appid=cb25e7f6307772a63a6088611feeab95'
+      );
+
+      const data = await response.json();
+
+      setWeather({
+        temp: Math.round(data.main.temp),
+        condition: data.weather[0].main,
+        icon: data.weather[0].icon,
+        city: data.name,
+      });
+    } catch (err) {
+      setWeatherError('Weather unavailable');
+    }
+  }
+
+  loadWeather();
+}, []);
+useEffect(() => {
+  async function loadRecentActivity() {
+    try {
+      const tickets = await fetchTickets();
+
+      const userTickets = tickets
+        .filter((ticket) =>
+          ticket.Owner?.toLowerCase() === user?.name?.toLowerCase()
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate)
+        )
+        .slice(0, 3);
+
+      const activities = userTickets.map((ticket) => ({
+        id: ticket.id,
+        text: `Created ${ticket.id} (${ticket.priority})`,
+      }));
+
+      setRecentActivity([
+        {
+          id: 'login',
+          text: 'Logged in recently',
+        },
+        ...activities,
+      ]);
+    } catch (err) {
+      setRecentActivity([]);
+    }
+  }
+
+  if (user) {
+    loadRecentActivity();
+  }
+}, [user]);
+useEffect(() => {
+  async function loadHolidays() {
+    try {
+      const response = await fetch(
+        'https://date.nager.at/api/v3/NextPublicHolidays/RO'
+      );
+
+      const data = await response.json();
+
+      const upcoming = data.slice(0, 3).map((holiday) => {
+        const holidayDate = new Date(holiday.date);
+        const today = new Date();
+
+        const diffTime = holidayDate - today;
+        const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        return {
+          name: holiday.localName,
+          daysLeft,
+        };
+      });
+
+      setHolidays(upcoming);
+    } catch (err) {
+      console.log('Holiday API failed');
+    }
+  }
+
+  loadHolidays();
+}, []);
 
   const unseenNotifications = notifications.filter((notification) => (
     !seenNotificationIds.includes(notification.id)
@@ -116,7 +212,16 @@ export default function WelcomePage() {
           <div className="time-pill">
             <span>{time}</span>
             <span>{date}</span>
-            <span>14°C</span>
+            <span className="weather-pill">
+  {weather && (
+    <>
+      <img
+        src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+        alt={weather.condition}
+      />
+      {weather.temp}°C
+    </>
+  )}</span>
           </div>
 
           <div className="quick-links">
@@ -135,34 +240,40 @@ export default function WelcomePage() {
           </div>
 
           <div className="support">
-            <h3>24/7 Support</h3>
+             <h3>24/7 Support</h3>
 
             <div className="support-row">
-              <i className="fa fa-user" aria-hidden="true"></i>
-              <span>Melika Javidfar</span>
-            </div>
+           <i className="support-dot online" aria-hidden="true"></i>
+           <span>Online Support Available</span></div>
 
-            <div className="support-row">
-              <i className="fa fa-envelope" aria-hidden="true"></i>
-              <span>melika.javidfar@euvt.com</span>
-            </div>
+               <div className="support-row">
+                 <i className="support-dot" aria-hidden="true"></i>
+                 <span>Melika Javidfar</span></div>
 
-            <div className="support-row">
-              <i className="fa fa-phone" aria-hidden="true"></i>
-              <span>+40123456789</span>
-            </div>
+                   <div className="support-row">
+                    <i className="support-dot" aria-hidden="true"></i>
+                    <span>Operations Support </span></div>
 
-            <div className="chatbot">
-              <img src="/assets/login-welcome/Images/chatbot (2).png" className="icon" alt="" />chatbot
-            </div>
-          </div>
-        </div>
+  <div className="support-row">
+    <i className="support-dot" aria-hidden="true"></i>
+    <span>melika.javidfar@euvt.com</span>
+  </div>
 
-        <div className="right">
+  <div className="chatbot">
+    <img
+      src="/assets/login-welcome/Images/chatbot (2).png"
+      className="icon"
+      alt=""
+    />
+        chatbot</div>
+       </div>
+       </div>
+       <div className="right">
           <div className="card-box">
             <h3>Upcoming Holidays</h3>
-            <p>• Easter Monday</p>
-            <p>• Labour Day</p>
+            {holidays.map((holiday, index) => (
+            <li key={index}>
+            {holiday.name} in {holiday.daysLeft} days</li>))}
           </div>
 
           <div className="card-box">
@@ -174,8 +285,11 @@ export default function WelcomePage() {
 
           <div className="card-box">
             <h3>Recent Activity</h3>
-            <p>Login from new device (3 hours ago)</p>
-            <p>Password updated (2 days ago)</p>
+            {recentActivity.map((activity) => (
+              <p key={activity.id}>
+                • {activity.text}</p>
+              ))}
+            
           </div>
 
           <div className="card-box notification-box">
@@ -261,5 +375,4 @@ export default function WelcomePage() {
         </div>
       )}
     </div>
-  );
-}
+);}
