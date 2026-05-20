@@ -92,6 +92,110 @@ async function fetchUser(userId, executor = { query }) {
   return result.rows[0] ? mapUserRow(result.rows[0]) : null;
 }
 
+/**
+ * Admin creates a user account. Differs from the public signup flow:
+ *   - email_verified is set to true immediately (the admin is vouching).
+ *   - A random temp password is generated server-side and emailed to the user.
+ *   - Optional role / status / team memberships are applied atomically.
+ *
+ * The plaintext password never leaves the server outside of the email.
+ */
+export async function createUser(req, res) {
+  const { name, email, role, status, teamIds } = req.body || {};
+
+  if (!name?.trim()) throw httpError(400, 'Name is required.');
+  if (!email?.trim()) throw httpError(400, 'Email is required.');
+  if (!role || !VALID_ROLES.includes(role)) {
+    throw httpError(400, `Role must be one of: ${VALID_ROLES.join(', ')}.`);
+  }
+  if (status && !VALID_STATUSES.includes(status)) {
+    throw httpError(400, `Status must be one of: ${VALID_STATUSES.join(', ')}.`);
+  }
+  if (teamIds !== undefined && !Array.isArray(teamIds)) {
+    throw httpError(400, 'teamIds must be an array.');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const tempPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+  const client = await pool.connect();
+  let createdId;
+  try {
+    await client.query('BEGIN');
+
+    const dup = await client.query('SELECT 1 FROM users WHERE email = $1', [normalizedEmail]);
+    if (dup.rowCount > 0) {
+      throw httpError(409, 'A user with this email already exists.');
+    }
+
+    const result = await client.query(
+      `INSERT INTO users (name, email, password_hash, role, status, email_verified)
+       VALUES ($1, $2, $3, $4, $5, true)
+       RETURNING id`,
+      [name.trim(), normalizedEmail, passwordHash, role, status || 'active']
+    );
+    createdId = result.rows[0].id;
+
+    if (Array.isArray(teamIds) && teamIds.length > 0) {
+      for (const rawId of teamIds) {
+        const teamId = Number(rawId);
+        if (!Number.isInteger(teamId)) {
+          throw httpError(400, 'teamIds must be integers.');
+        }
+        const tr = await client.query('SELECT 1 FROM teams WHERE id = $1', [teamId]);
+        if (tr.rowCount === 0) {
+          throw httpError(400, `Team ${teamId} does not exist.`);
+        }
+        await client.query(
+          'INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)',
+          [teamId, createdId]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  // Email runs after commit. If SMTP fails the account still exists; admin
+  // can hit "Reset password" to resend credentials.
+  const appUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
+  try {
+    await sendEmail({
+      to: normalizedEmail,
+      subject: 'Your Operation Tracking account has been created',
+      text:
+        `Hi ${name.trim()},\n\n` +
+        `An administrator created an account for you.\n\n` +
+        `Login URL: ${appUrl}/login\n` +
+        `Email: ${normalizedEmail}\n` +
+        `Temporary password: ${tempPassword}\n\n` +
+        `Please log in and change your password as soon as you can.`,
+      html: `
+        <p>Hi ${name.trim()},</p>
+        <p>An administrator created an account for you.</p>
+        <p>
+          <strong>Login:</strong> <a href="${appUrl}/login">${appUrl}/login</a><br/>
+          <strong>Email:</strong> ${normalizedEmail}<br/>
+          <strong>Temporary password:</strong>
+          <code style="font-size:16px;background:#f3f4f6;padding:4px 8px;border-radius:4px;">${tempPassword}</code>
+        </p>
+        <p>Please log in and change your password as soon as you can.</p>
+      `,
+    });
+  } catch (err) {
+    console.error(`[create-user-email] Failed to email ${normalizedEmail}:`, err);
+  }
+
+  const created = await fetchUser(createdId);
+  return res.status(201).json(created);
+}
+
 export async function listUsers(req, res) {
   // One row per user with team memberships aggregated into a JSON array.
   // The FILTER inside json_agg drops the synthetic NULL row produced by

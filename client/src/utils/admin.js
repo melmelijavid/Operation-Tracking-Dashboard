@@ -11,6 +11,13 @@ export async function updateAdminUser(userId, payload) {
   });
 }
 
+export async function createAdminUser(payload) {
+  return apiRequest('/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function resetAdminUserPassword(userId) {
   return apiRequest(`/admin/users/${encodeURIComponent(userId)}/reset-password`, {
     method: 'POST',
