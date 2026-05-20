@@ -5,6 +5,7 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 import WelcomePage from './pages/WelcomePage';
 import DashboardPage from './pages/DashboardPage';
 import TicketManagementPage from './pages/TicketManagementPage';
+import ProfilePage from './pages/ProfilePage';
 import StatisticsPage from './pages/StatisticsPage';
 import TicketDetailPage from './pages/TicketDetailPage';
 import UsersPage from './pages/UsersPage';
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/tickets/:id" element={<TicketDetailPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/users" element={<UsersPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
         <Route element={<RoleRoute allowedRoles={['admin']} />}>
           <Route path="/admin" element={<AdminLayout />}>
