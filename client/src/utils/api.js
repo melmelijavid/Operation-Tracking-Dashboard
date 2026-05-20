@@ -6,7 +6,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 export async function apiRequest(path, options = {}) {
   const headers = new Headers(options.headers || {});
 
-  if (!headers.has('Content-Type') && options.body) {
+  // For FormData uploads, let fetch set Content-Type with the multipart
+  // boundary itself. Setting application/json here would break the upload.
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  if (!headers.has('Content-Type') && options.body && !isFormData) {
     headers.set('Content-Type', 'application/json');
   }
 

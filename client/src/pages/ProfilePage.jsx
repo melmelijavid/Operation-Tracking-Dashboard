@@ -1,14 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import {
   changeMyEmail,
   changeMyPassword,
+  deleteMyAvatar,
   fetchMyProfile,
   updateMyProfile,
+  uploadMyAvatar,
 } from '../utils/me';
 import '../styles/admin.css';
 import '../styles/profile.css';
+
+const AVATAR_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif';
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
 function getInitials(name) {
   if (!name) return '?';
@@ -49,6 +54,11 @@ export default function ProfilePage() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordNotice, setPasswordNotice] = useState('');
+
+  // Avatar state
+  const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -123,6 +133,47 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleAvatarPicked(event) {
+    setAvatarError('');
+    const file = event.target.files?.[0];
+    // Reset the input so picking the same file again still fires onChange.
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarError('Please choose an image file.');
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      setAvatarError('Image must be 5MB or smaller.');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const updated = await uploadMyAvatar(file);
+      setProfile(updated);
+    } catch (err) {
+      setAvatarError(err.message || 'Could not upload avatar.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    setAvatarError('');
+    if (!window.confirm('Remove your profile picture?')) return;
+    setUploadingAvatar(true);
+    try {
+      const updated = await deleteMyAvatar();
+      setProfile(updated);
+    } catch (err) {
+      setAvatarError(err.message || 'Could not remove avatar.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }
+
   async function handleChangePassword(event) {
     event.preventDefault();
     setPasswordError('');
@@ -174,8 +225,40 @@ export default function ProfilePage() {
         </header>
 
         <section className="profile-card profile-summary">
-          <div className="profile-avatar" aria-hidden="true">
-            {getInitials(profile.name)}
+          <div className="profile-avatar-wrap">
+            {profile.avatarUrl ? (
+              <img src={profile.avatarUrl} alt="" className="profile-avatar-img" />
+            ) : (
+              <div className="profile-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept={AVATAR_ACCEPT}
+              style={{ display: 'none' }}
+              onChange={handleAvatarPicked}
+            />
+            <div className="profile-avatar-actions">
+              <button
+                type="button"
+                className="btn-secondary btn-small"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+              >
+                {uploadingAvatar ? 'Uploading…' : (profile.avatarUrl ? 'Change photo' : 'Upload photo')}
+              </button>
+              {profile.avatarUrl && (
+                <button
+                  type="button"
+                  className="btn-secondary btn-small btn-danger-outline"
+                  onClick={handleRemoveAvatar}
+                  disabled={uploadingAvatar}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            {avatarError && <p className="admin-error profile-avatar-error" role="alert">{avatarError}</p>}
           </div>
           <div className="profile-summary-text">
             <h2>{profile.name}</h2>

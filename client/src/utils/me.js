@@ -24,3 +24,18 @@ export async function changeMyPassword(currentPassword, newPassword) {
     body: JSON.stringify({ currentPassword, newPassword }),
   });
 }
+
+export async function uploadMyAvatar(file) {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  return apiRequest('/me/avatar', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+export async function deleteMyAvatar() {
+  return apiRequest('/me/avatar', {
+    method: 'DELETE',
+  });
+}
