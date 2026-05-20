@@ -1,6 +1,63 @@
 import { query } from '../db.js';
+import { sendEmail } from '../utils/email.js';
 import { mapTicketRow } from '../utils/ticketMapper.js';
 import { calculateSlaDeadline, getDefaultSlaForPriority } from '../utils/sla.js';
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Notifies @ mentioned users by email. Self-mentions and users who muted
+// notifications are skipped. Failures are logged, not thrown — the comment
+// is already committed by the time this runs.
+async function notifyMentionedUsers({ ticketId, ticketDescription, authorId, authorName, commentText, mentionedUserIds }) {
+  const recipientIds = mentionedUserIds.filter((id) => id !== authorId);
+  if (recipientIds.length === 0) return;
+
+  const recipients = await query(
+    `SELECT id, name, email
+     FROM users
+     WHERE id = ANY($1::int[])
+       AND email_notifications_enabled = true
+       AND status = 'active'`,
+    [recipientIds]
+  );
+
+  const appUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
+  const ticketUrl = `${appUrl}/tickets/${encodeURIComponent(ticketId)}`;
+  const previewText = commentText.length > 500 ? `${commentText.slice(0, 500)}…` : commentText;
+
+  for (const recipient of recipients.rows) {
+    try {
+      await sendEmail({
+        to: recipient.email,
+        subject: `You were mentioned on ${ticketId}`,
+        text:
+          `Hi ${recipient.name},\n\n` +
+          `${authorName} mentioned you in a work note on ticket ${ticketId} — "${ticketDescription}":\n\n` +
+          `"${previewText}"\n\n` +
+          `Open the ticket: ${ticketUrl}\n`,
+        html: `
+          <p>Hi ${escapeHtml(recipient.name)},</p>
+          <p><strong>${escapeHtml(authorName)}</strong> mentioned you in a work note on
+             ticket <a href="${ticketUrl}">${escapeHtml(ticketId)}</a> —
+             <em>${escapeHtml(ticketDescription)}</em>.</p>
+          <blockquote style="margin:12px 0;padding:8px 12px;border-left:3px solid #8fb3ff;color:#333;">
+            ${escapeHtml(previewText).replace(/\n/g, '<br/>')}
+          </blockquote>
+          <p><a href="${ticketUrl}">Open the ticket</a></p>
+        `,
+      });
+    } catch (err) {
+      console.error(`[mention-email] Failed to notify ${recipient.email}:`, err);
+    }
+  }
+}
 
 const ticketSelect = `
   SELECT
@@ -298,6 +355,17 @@ export async function addTicketComment(req, res) {
   }
 
   await addHistoryEntry(req.params.id, req.user.id, 'commented', 'comment', null, commentText);
+
+  if (mentionedUserIds.length > 0) {
+    await notifyMentionedUsers({
+      ticketId: req.params.id,
+      ticketDescription: ticket.description,
+      authorId: req.user.id,
+      authorName: req.user.name || 'A teammate',
+      commentText,
+      mentionedUserIds,
+    });
+  }
 
   return getTicketComments(req, res);
 }
