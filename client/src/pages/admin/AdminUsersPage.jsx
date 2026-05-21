@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchAdminUsers } from '../../utils/admin';
 import { fetchTeams } from '../../utils/teams';
+import CreateUserModal from './CreateUserModal';
 import EditUserModal from './EditUserModal';
 
 const ROLE_OPTIONS = ['admin', 'operator', 'viewer'];
@@ -19,6 +20,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
+  const [creatingUser, setCreatingUser] = useState(false);
 
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
@@ -46,6 +48,11 @@ export default function AdminUsersPage() {
   function handleUserSaved(updated) {
     setUsers((current) => current.map((u) => (u.id === updated.id ? updated : u)));
     setEditingUser(null);
+  }
+
+  function handleUserCreated(created) {
+    setUsers((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+    setCreatingUser(false);
   }
 
   const filteredUsers = useMemo(() => {
@@ -79,6 +86,9 @@ export default function AdminUsersPage() {
           {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <span className="admin-count">{filteredUsers.length} of {users.length}</span>
+        <button type="button" className="btn-primary" onClick={() => setCreatingUser(true)}>
+          + Create user
+        </button>
       </div>
 
       {error && <p className="admin-error" role="alert">{error}</p>}
@@ -159,6 +169,14 @@ export default function AdminUsersPage() {
           teams={teams}
           onClose={() => setEditingUser(null)}
           onSaved={handleUserSaved}
+        />
+      )}
+
+      {creatingUser && (
+        <CreateUserModal
+          teams={teams}
+          onClose={() => setCreatingUser(false)}
+          onSaved={handleUserCreated}
         />
       )}
     </div>

@@ -39,6 +39,14 @@ export function errorHandler(err, req, res, next) {
     return res.status(400).json({ message: 'Request body is not valid JSON.' });
   }
 
+  // Multer file-upload errors — map by code to friendly messages.
+  if (err.name === 'MulterError') {
+    let message = 'File upload failed.';
+    if (err.code === 'LIMIT_FILE_SIZE') message = 'File is too large (max 5MB).';
+    else if (err.code === 'LIMIT_UNEXPECTED_FILE') message = 'Unexpected upload field.';
+    return res.status(400).json({ message });
+  }
+
   // 2. Postgres errors carry a SQLSTATE in `err.code`.
   if (err.code && PG_ERROR_MAP[err.code]) {
     const mapped = PG_ERROR_MAP[err.code];

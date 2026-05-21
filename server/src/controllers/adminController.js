@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import { pool, query } from '../db.js';
+import { actorFromReq, recordAuditEvent } from '../utils/auditLog.js';
 import { sendEmail } from '../utils/email.js';
 
 const VALID_ROLES = ['admin', 'operator', 'viewer'];
@@ -92,6 +93,123 @@ async function fetchUser(userId, executor = { query }) {
   return result.rows[0] ? mapUserRow(result.rows[0]) : null;
 }
 
+/**
+ * Admin creates a user account. Differs from the public signup flow:
+ *   - email_verified is set to true immediately (the admin is vouching).
+ *   - A random temp password is generated server-side and emailed to the user.
+ *   - Optional role / status / team memberships are applied atomically.
+ *
+ * The plaintext password never leaves the server outside of the email.
+ */
+export async function createUser(req, res) {
+  const { name, email, role, status, teamIds } = req.body || {};
+
+  if (!name?.trim()) throw httpError(400, 'Name is required.');
+  if (!email?.trim()) throw httpError(400, 'Email is required.');
+  if (!role || !VALID_ROLES.includes(role)) {
+    throw httpError(400, `Role must be one of: ${VALID_ROLES.join(', ')}.`);
+  }
+  if (status && !VALID_STATUSES.includes(status)) {
+    throw httpError(400, `Status must be one of: ${VALID_STATUSES.join(', ')}.`);
+  }
+  if (teamIds !== undefined && !Array.isArray(teamIds)) {
+    throw httpError(400, 'teamIds must be an array.');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const tempPassword = generateTempPassword();
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+  const client = await pool.connect();
+  let createdId;
+  try {
+    await client.query('BEGIN');
+
+    const dup = await client.query('SELECT 1 FROM users WHERE email = $1', [normalizedEmail]);
+    if (dup.rowCount > 0) {
+      throw httpError(409, 'A user with this email already exists.');
+    }
+
+    const result = await client.query(
+      `INSERT INTO users (name, email, password_hash, role, status, email_verified)
+       VALUES ($1, $2, $3, $4, $5, true)
+       RETURNING id`,
+      [name.trim(), normalizedEmail, passwordHash, role, status || 'active']
+    );
+    createdId = result.rows[0].id;
+
+    if (Array.isArray(teamIds) && teamIds.length > 0) {
+      for (const rawId of teamIds) {
+        const teamId = Number(rawId);
+        if (!Number.isInteger(teamId)) {
+          throw httpError(400, 'teamIds must be integers.');
+        }
+        const tr = await client.query('SELECT 1 FROM teams WHERE id = $1', [teamId]);
+        if (tr.rowCount === 0) {
+          throw httpError(400, `Team ${teamId} does not exist.`);
+        }
+        await client.query(
+          'INSERT INTO team_members (team_id, user_id) VALUES ($1, $2)',
+          [teamId, createdId]
+        );
+      }
+    }
+
+    await recordAuditEvent({
+      executor: client,
+      actor: actorFromReq(req),
+      action: 'user.created',
+      target: { type: 'user', id: createdId, label: normalizedEmail },
+      details: {
+        name: name.trim(),
+        role,
+        status: status || 'active',
+        teamIds: Array.isArray(teamIds) ? teamIds : [],
+      },
+    });
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  // Email runs after commit. If SMTP fails the account still exists; admin
+  // can hit "Reset password" to resend credentials.
+  const appUrl = process.env.CORS_ORIGIN || 'http://localhost:5173';
+  try {
+    await sendEmail({
+      to: normalizedEmail,
+      subject: 'Your Operation Tracking account has been created',
+      text:
+        `Hi ${name.trim()},\n\n` +
+        `An administrator created an account for you.\n\n` +
+        `Login URL: ${appUrl}/login\n` +
+        `Email: ${normalizedEmail}\n` +
+        `Temporary password: ${tempPassword}\n\n` +
+        `Please log in and change your password as soon as you can.`,
+      html: `
+        <p>Hi ${name.trim()},</p>
+        <p>An administrator created an account for you.</p>
+        <p>
+          <strong>Login:</strong> <a href="${appUrl}/login">${appUrl}/login</a><br/>
+          <strong>Email:</strong> ${normalizedEmail}<br/>
+          <strong>Temporary password:</strong>
+          <code style="font-size:16px;background:#f3f4f6;padding:4px 8px;border-radius:4px;">${tempPassword}</code>
+        </p>
+        <p>Please log in and change your password as soon as you can.</p>
+      `,
+    });
+  } catch (err) {
+    console.error(`[create-user-email] Failed to email ${normalizedEmail}:`, err);
+  }
+
+  const created = await fetchUser(createdId);
+  return res.status(201).json(created);
+}
+
 export async function listUsers(req, res) {
   // One row per user with team memberships aggregated into a JSON array.
   // The FILTER inside json_agg drops the synthetic NULL row produced by
@@ -149,13 +267,20 @@ export async function updateUser(req, res) {
     await client.query('BEGIN');
 
     const existingResult = await client.query(
-      'SELECT id, role, status, email FROM users WHERE id = $1 FOR UPDATE',
+      'SELECT id, name, role, status, email FROM users WHERE id = $1 FOR UPDATE',
       [userId]
     );
     if (existingResult.rowCount === 0) {
       throw httpError(404, 'User not found.');
     }
     const existing = existingResult.rows[0];
+
+    // Capture current team_member rows so we can diff after the replace.
+    const previousMembersResult = await client.query(
+      'SELECT team_id FROM team_members WHERE user_id = $1',
+      [userId]
+    );
+    const previousTeamIds = previousMembersResult.rows.map((r) => r.team_id).sort();
 
     // If the email is changing, check uniqueness against everyone else.
     if (email && email.trim().toLowerCase() !== existing.email) {
@@ -212,6 +337,40 @@ export async function updateUser(req, res) {
           [teamId, userId]
         );
       }
+    }
+
+    // Build a diff for the audit log — only record fields that actually changed.
+    const changes = {};
+    if (name !== undefined && name.trim() && name.trim() !== existing.name) {
+      changes.name = { from: existing.name, to: name.trim() };
+    }
+    const newEmail = email ? email.trim().toLowerCase() : null;
+    if (newEmail && newEmail !== existing.email) {
+      changes.email = { from: existing.email, to: newEmail };
+    }
+    if (role !== undefined && role !== existing.role) {
+      changes.role = { from: existing.role, to: role };
+    }
+    if (status !== undefined && status !== existing.status) {
+      changes.status = { from: existing.status, to: status };
+    }
+    if (teamIds !== undefined) {
+      const nextTeamIds = [...teamIds].map(Number).sort();
+      const same = nextTeamIds.length === previousTeamIds.length
+        && nextTeamIds.every((id, i) => id === previousTeamIds[i]);
+      if (!same) {
+        changes.teamIds = { from: previousTeamIds, to: nextTeamIds };
+      }
+    }
+
+    if (Object.keys(changes).length > 0) {
+      await recordAuditEvent({
+        executor: client,
+        actor: actorFromReq(req),
+        action: 'user.updated',
+        target: { type: 'user', id: userId, label: existing.email },
+        details: { changes },
+      });
     }
 
     await client.query('COMMIT');
@@ -359,6 +518,18 @@ export async function createTeam(req, res) {
 
     await assignTeamMembers(client, createdId, memberIds || []);
 
+    await recordAuditEvent({
+      executor: client,
+      actor: actorFromReq(req),
+      action: 'team.created',
+      target: { type: 'team', id: createdId, label: name.trim() },
+      details: {
+        description: description?.trim() || null,
+        department: department?.trim() || null,
+        memberIds: Array.isArray(memberIds) ? memberIds : [],
+      },
+    });
+
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
@@ -394,12 +565,19 @@ export async function updateTeam(req, res) {
     await client.query('BEGIN');
 
     const existing = await client.query(
-      'SELECT id, name FROM teams WHERE id = $1 FOR UPDATE',
+      'SELECT id, name, description, department, status FROM teams WHERE id = $1 FOR UPDATE',
       [teamId]
     );
     if (existing.rowCount === 0) {
       throw httpError(404, 'Team not found.');
     }
+    const existingTeam = existing.rows[0];
+
+    const previousMembersResult = await client.query(
+      'SELECT user_id FROM team_members WHERE team_id = $1',
+      [teamId]
+    );
+    const previousMemberIds = previousMembersResult.rows.map((r) => r.user_id).sort();
 
     if (name && name.trim() !== existing.rows[0].name) {
       const dup = await client.query(
@@ -431,6 +609,39 @@ export async function updateTeam(req, res) {
 
     if (memberIds !== undefined) {
       await assignTeamMembers(client, teamId, memberIds);
+    }
+
+    // Build a diff for the audit log.
+    const changes = {};
+    if (name !== undefined && name.trim() !== existingTeam.name) {
+      changes.name = { from: existingTeam.name, to: name.trim() };
+    }
+    if (description !== undefined && (description?.trim() || null) !== existingTeam.description) {
+      changes.description = { from: existingTeam.description, to: description?.trim() || null };
+    }
+    if (department !== undefined && (department?.trim() || null) !== existingTeam.department) {
+      changes.department = { from: existingTeam.department, to: department?.trim() || null };
+    }
+    if (status !== undefined && status !== existingTeam.status) {
+      changes.status = { from: existingTeam.status, to: status };
+    }
+    if (memberIds !== undefined) {
+      const nextMemberIds = [...memberIds].map(Number).sort();
+      const same = nextMemberIds.length === previousMemberIds.length
+        && nextMemberIds.every((id, i) => id === previousMemberIds[i]);
+      if (!same) {
+        changes.memberIds = { from: previousMemberIds, to: nextMemberIds };
+      }
+    }
+
+    if (Object.keys(changes).length > 0) {
+      await recordAuditEvent({
+        executor: client,
+        actor: actorFromReq(req),
+        action: 'team.updated',
+        target: { type: 'team', id: teamId, label: existingTeam.name },
+        details: { changes },
+      });
     }
 
     await client.query('COMMIT');
@@ -470,7 +681,24 @@ export async function resetUserPassword(req, res) {
   const newPassword = generateTempPassword();
   const passwordHash = await bcrypt.hash(newPassword, 10);
 
-  await query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, userId]);
+    await recordAuditEvent({
+      executor: client,
+      actor: actorFromReq(req),
+      action: 'user.password_reset',
+      target: { type: 'user', id: userId, label: user.email },
+      details: {},
+    });
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
 
   await sendEmail({
     to: user.email,

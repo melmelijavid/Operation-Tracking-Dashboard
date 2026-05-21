@@ -42,7 +42,7 @@ function setSessionCookie(res, token) {
   res.cookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions());
 }
 
-function clearSessionCookie(res) {
+export function clearSessionCookie(res) {
   // clearCookie must echo the same path / sameSite / secure flags or the
   // browser will silently keep the original cookie around.
   const { maxAge: _ignored, ...options } = getSessionCookieOptions();
@@ -62,7 +62,7 @@ function getSignupRole(normalizedEmail) {
   return normalizedEmail.endsWith('@nokia.com') ? 'operator' : 'viewer';
 }
 
-async function issueVerificationCode(user) {
+export async function issueVerificationCode(user) {
   // Invalidate any active codes the user has — a fresh issue supersedes them.
   await query(
     `UPDATE email_verification_codes

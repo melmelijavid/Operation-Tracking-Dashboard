@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createTeam,
+  createUser,
   listTeams,
   listUsers,
   resetUserPassword,
@@ -16,6 +17,7 @@ router.use(authenticateToken);
 router.use(authorizeRoles('admin'));
 
 router.get('/users', listUsers);
+router.post('/users', createUser);
 router.patch('/users/:id', updateUser);
 router.post('/users/:id/reset-password', resetUserPassword);
 
