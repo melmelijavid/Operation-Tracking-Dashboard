@@ -48,23 +48,28 @@ export default function WelcomePage() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [seenNotificationIds, setSeenNotificationIds] = useState(() => loadSeenNotificationIds(user));
   const now = new Date();
-  const currentMonth = now.toLocaleString('default', {
+  const [displayedMonthDate, setDisplayedMonthDate] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
+  const currentMonth = displayedMonthDate.toLocaleString('default', {
   month: 'long',
 });
 
-const currentYear = now.getFullYear();
+const currentYear = displayedMonthDate.getFullYear();
 
-const currentDay = now.getDate();
+const currentDay = (
+  currentYear === now.getFullYear() && displayedMonthDate.getMonth() === now.getMonth()
+    ? now.getDate()
+    : null
+);
 
 const firstDayOfMonth = new Date(
   currentYear,
-  now.getMonth(),
+  displayedMonthDate.getMonth(),
   1
 ).getDay();
 
 const daysInMonth = new Date(
   currentYear,
-  now.getMonth() + 1,
+  displayedMonthDate.getMonth() + 1,
   0
 ).getDate();
 
@@ -173,7 +178,7 @@ useEffect(() => {
 
       const data = await response.json();
 
-      const upcoming = data.slice(0, 3).map((holiday) => {
+      const upcoming = data.map((holiday) => {
         const holidayDate = new Date(holiday.date);
         const today = new Date();
 
@@ -182,6 +187,7 @@ useEffect(() => {
 
         return {
           name: holiday.localName,
+          date: holiday.date,
           daysLeft,
         };
       });
@@ -207,6 +213,135 @@ useEffect(() => {
     setSeenNotificationIds(nextSeenIds);
     saveSeenNotificationIds(user, nextSeenIds);
   }
+
+  const holidayDayNumbers = new Set(
+    holidays
+      .map((holiday) => {
+        const [holidayYear, holidayMonth, holidayDay] = holiday.date.split('-').map(Number);
+        if (holidayYear === currentYear && holidayMonth === displayedMonthDate.getMonth() + 1) {
+          return holidayDay;
+        }
+        return null;
+      })
+      .filter(Boolean)
+  );
+
+  function moveCalendarMonth(direction) {
+    setDisplayedMonthDate((current) => (
+      new Date(current.getFullYear(), current.getMonth() + direction, 1)
+    ));
+  }
+
+  function getCalendarDayClass(day) {
+    if (!day) return '';
+
+    const classNames = [];
+    if (day === currentDay) classNames.push('active-date');
+    if (holidayDayNumbers.has(day)) classNames.push('holiday-date');
+
+    return classNames.join(' ');
+  }
+
+  const weatherWidget = (
+    <div className="weather-widget">
+      <div className="weather-top">
+        <div className="weather-time">
+          <h2>{time}</h2>
+          <p>{date}</p>
+        </div>
+      </div>
+
+      <div className="weather-divider"></div>
+
+      <div className="weather-bottom">
+        <div className="weather-left">
+          {weather && (
+            <img
+              src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+              alt={weather.condition}
+            />
+          )}
+        </div>
+
+        <div className="weather-center">
+          <p className="city-name">
+            {weather?.city || weatherError || 'Weather'}
+          </p>
+
+          <h1>{weather?.temp ?? '--'}°C</h1>
+
+          <span>{weather?.condition || 'Unavailable'}</span>
+        </div>
+
+        <div className="weather-right">
+          <div>
+            <p>Humidity</p>
+            <strong>{weather ? `${weather.humidity}%` : '-'}</strong>
+          </div>
+
+          <div>
+            <p>Wind</p>
+            <strong>{weather ? `${weather.wind} km/h` : '-'}</strong>
+          </div>
+
+          <div>
+            <p>Feels Like</p>
+            <strong>{weather ? `${weather.feelsLike}°C` : '-'}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const calendarWidget = (
+    <div className="calendar-widget">
+      <div className="calendar-holidays">
+        <h4>Upcoming Holidays</h4>
+
+        {holidays.length === 0 ? (
+          <p>No upcoming holidays loaded.</p>
+        ) : (
+          holidays.slice(0, 3).map((holiday, index) => (
+            <div className="calendar-holiday" key={`${holiday.date}-${index}`}>
+              <span>{holiday.name}</span>
+              <strong>{holiday.daysLeft} days</strong>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="calendar-header">
+        <button type="button" onClick={() => moveCalendarMonth(-1)}>{'<'}</button>
+
+        <h3>
+          {currentMonth} {currentYear}
+        </h3>
+
+        <button type="button" onClick={() => moveCalendarMonth(1)}>{'>'}</button>
+      </div>
+
+      <div className="calendar-days">
+        <span>Su</span>
+        <span>Mo</span>
+        <span>Tu</span>
+        <span>We</span>
+        <span>Th</span>
+        <span>Fr</span>
+        <span>Sa</span>
+      </div>
+
+      <div className="calendar-dates">
+        {calendarDays.map((day, index) => (
+          <span
+            key={index}
+            className={getCalendarDayClass(day)}
+          >
+            {day || ''}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="welcome-page">
@@ -245,120 +380,6 @@ useEffect(() => {
         </div>
 
         <div className="center">
-          <div className="top-widgets">
-
-  <div className="weather-widget">
-  
-
-  <div className="weather-top">
-
-    <div className="weather-time">
-      <h2>{time}</h2>
-      <p>{date}</p>
-    </div>
-
-  </div>
-
-  <div className="weather-divider"></div>
-
-  <div className="weather-bottom">
-
-    <div className="weather-left">
-      {weather && (
-        <img
-          src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
-          alt={weather.condition}
-        />
-      )}
-    </div>
-
-    <div className="weather-center">
-
-      <p className="city-name">
-        {weather?.city}
-      </p>
-
-      <h1>{weather?.temp}°C</h1>
-
-      <span>{weather?.condition}</span>
-
-    </div>
-
-    <div className="weather-right">
-
-      <div>
-        <p>Humidity</p>
-        <strong>{weather?.humidity}%</strong>
-      </div>
-
-      <div>
-        <p>Wind</p>
-        <strong>{weather?.wind} km/h</strong>
-      </div>
-
-      <div>
-        <p>Feels Like</p>
-        <strong>{weather?.feelsLike}°C</strong>
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-  
-  <div className="calendar-widget">
-
-
-  <div className="calendar-header">
-    <button>{'<'}</button>
-
-    <h3>
-      {currentMonth} {currentYear}
-    </h3>
-
-    <button>{'>'}</button>
-  </div>
-
-  <div className="calendar-days">
-    <span>Su</span>
-    <span>Mo</span>
-    <span>Tu</span>
-    <span>We</span>
-    <span>Th</span>
-    <span>Fr</span>
-    <span>Sa</span>
-  </div>
-
-  <div className="calendar-dates">
-
-    {calendarDays.map((day, index) => (
-      <span
-        key={index}
-        className={
-          day === currentDay
-            ? 'active-date'
-            : ''
-        }
-      >
-        {day || ''}
-      </span>
-    ))}
-
-  </div>
-
-</div>
-</div>
-
-
-
-
-
-          
-
-          
-
           <div className="quick-links">
             <h3>Quick Links</h3>
             <div className="links">
@@ -404,12 +425,8 @@ useEffect(() => {
        </div>
        </div>
        <div className="right">
-          <div className="card-box">
-            <h3>Upcoming Holidays</h3>
-            {holidays.map((holiday, index) => (
-            <li key={index}>
-            {holiday.name} in {holiday.daysLeft} days</li>))}
-          </div>
+          {weatherWidget}
+          {calendarWidget}
 
           <div className="card-box">
             <h3>System Logs</h3>

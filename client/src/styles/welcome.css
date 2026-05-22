@@ -298,6 +298,7 @@ border: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   flex-direction: column;
   gap: 15px;
+  align-items: stretch;
 }
 
 .welcome-page .links {
@@ -772,33 +773,27 @@ isolation: isolate;
   background-image:
     url('/assets/login-welcome/Images/setting.jpg');
 }
-.welcome-page .top-widgets {
-  display: grid;
-
-  grid-template-columns:
-    1.4fr
-    0.9fr;
-
-  gap: 18px;
-
-  margin-bottom: 18px;
-}
-
 .welcome-page .weather-widget {
   position: relative;
+
+  align-self: stretch;
+
+  width: 100%;
+
+  box-sizing: border-box;
 
   display: flex;
   flex-direction: column;
 
   justify-content: center;
 
-  gap: 18px;
+  gap: 10px;
 
-  padding: 28px 30px;
+  padding: 16px;
 
-  min-height: 180px;
+  min-height: 0;
 
-  border-radius: 30px;
+  border-radius: 22px;
 
   overflow: hidden;
 
@@ -845,7 +840,7 @@ isolation: isolate;
 }
 
 .welcome-page .weather-time h2 {
-  font-size: 48px;
+  font-size: 30px;
   line-height: 1;
 
   margin-bottom: 6px;
@@ -892,8 +887,8 @@ isolation: isolate;
 /* LEFT ICON */
 
 .welcome-page .weather-left img {
-  width: 72px;
-  height: 72px;
+  width: 48px;
+  height: 48px;
 
   filter:
     drop-shadow(0 0 18px rgba(0,209,255,0.28));
@@ -910,14 +905,14 @@ isolation: isolate;
 }
 
 .welcome-page .city-name {
-  font-size: 18px;
+  font-size: 13px;
   opacity: 0.82;
 
   margin-bottom: 4px;
 }
 
 .welcome-page .weather-center h1 {
-  font-size: 50px;
+  font-size: 30px;
   line-height: 1;
 
   font-weight: 550;
@@ -927,7 +922,7 @@ isolation: isolate;
 
 .welcome-page .weather-center span {
   opacity: 0.72;
-  font-size: 16px;
+  font-size: 12px;
 }
 
 /* RIGHT INFO */
@@ -936,30 +931,29 @@ isolation: isolate;
   display: flex;
   flex-direction: column;
 
-  gap: 12px;
+  gap: 7px;
 
   text-align: right;
 }
 
 .welcome-page .weather-right p {
   opacity: 0.55;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .welcome-page .weather-right strong {
-  font-size: 16px;
+  font-size: 12px;
 }
 .welcome-page .weather-time {
-  padding-left: 24px;
+  padding-left: 0;
 
-  border-left:
-    1px solid rgba(255,255,255,0.10);
+  border-left: 0;
 
-  text-align: right;
+  text-align: center;
 }
 
 .welcome-page .weather-time h2 {
-  font-size: 40px;
+  font-size: 30px;
   line-height: 1.05;
 
   margin-bottom: 8px;
@@ -967,17 +961,23 @@ isolation: isolate;
 
 .welcome-page .weather-time p {
   opacity: 0.7;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 /* CALENDAR */
 
 .welcome-page .calendar-widget {
-  padding: 24px;
+  align-self: stretch;
 
-  min-height: 180px;
+  width: 100%;
 
-  border-radius: 30px;
+  box-sizing: border-box;
+
+  padding: 16px;
+
+  min-height: 0;
+
+  border-radius: 22px;
 
   background:
 rgba(10, 18, 50, 0.42);
@@ -1005,11 +1005,12 @@ inset 0 1px 0 rgba(255,255,255,0.05);
   justify-content: space-between;
   align-items: center;
 
-  margin-bottom: 18px;
+  margin: 14px 0 10px;
 }
 
 .welcome-page .calendar-header h3 {
-  font-size: 20px;
+  font-size: 16px;
+  margin: 0;
 }
 
 .welcome-page .calendar-header button {
@@ -1026,22 +1027,74 @@ inset 0 1px 0 rgba(255,255,255,0.05);
 
   grid-template-columns: repeat(7, 1fr);
 
-  gap: 10px;
+  gap: 5px;
 
   text-align: center;
 }
 
 .welcome-page .calendar-days span {
   opacity: 0.5;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .welcome-page .calendar-dates span {
-  padding: 8px;
+  display: grid;
+  place-items: center;
+  min-height: 26px;
+  padding: 4px;
 
   border-radius: 50%;
 
-  font-size: 14px;
+  font-size: 12px;
+}
+
+.welcome-page .calendar-holidays {
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  display: grid;
+  gap: 8px;
+}
+
+.welcome-page .calendar-holidays h4 {
+  margin: 0;
+  color: rgba(255,255,255,0.86);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.welcome-page .calendar-holidays p {
+  margin: 0;
+  color: rgba(255,255,255,0.58);
+  font-size: 13px;
+}
+
+.welcome-page .calendar-holiday {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.welcome-page .calendar-holiday span {
+  min-width: 0;
+  color: rgba(255,255,255,0.82);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.welcome-page .calendar-holiday strong {
+  flex: 0 0 auto;
+  color: #8fb3ff;
+  font-size: 11px;
 }
 
 .welcome-page .active-date {
@@ -1054,4 +1107,23 @@ inset 0 1px 0 rgba(255,255,255,0.05);
 
   box-shadow:
     0 0 18px rgba(139,92,246,0.35);
+}
+
+.welcome-page .holiday-date {
+  background:
+    linear-gradient(
+      135deg,
+      #22c55e,
+      #15803d
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 0 16px rgba(34,197,94,0.34);
+}
+
+.welcome-page .active-date.holiday-date {
+  outline: 2px solid rgba(74,222,128,0.72);
+  outline-offset: 2px;
 }
