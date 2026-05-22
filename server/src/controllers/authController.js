@@ -55,6 +55,7 @@ function userResponse(user) {
     name: user.name,
     email: user.email,
     role: user.role,
+    avatarUrl: user.avatar_url || '',
   };
 }
 
@@ -142,7 +143,7 @@ export async function login(req, res) {
 
   const normalizedEmail = email.trim().toLowerCase();
   const result = await query(
-    `SELECT id, name, email, password_hash, role, email_verified, status
+    `SELECT id, name, email, password_hash, role, email_verified, status, avatar_url
      FROM users
      WHERE email = $1`,
     [normalizedEmail]
@@ -189,7 +190,7 @@ export async function logout(req, res) {
 
 export async function getCurrentUser(req, res) {
   const result = await query(
-    `SELECT id, name, email, role
+    `SELECT id, name, email, role, avatar_url
      FROM users
      WHERE id = $1`,
     [req.user.id]
@@ -199,7 +200,7 @@ export async function getCurrentUser(req, res) {
     return res.status(404).json({ message: 'User not found.' });
   }
 
-  return res.json({ user: result.rows[0] });
+  return res.json({ user: userResponse(result.rows[0]) });
 }
 
 export async function verifyEmail(req, res) {

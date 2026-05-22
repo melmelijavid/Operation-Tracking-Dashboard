@@ -67,4 +67,8 @@ export const authService = {
   peekCachedUser() {
     return loadStoredUser();
   },
+
+  cacheUser(user) {
+    saveStoredUser(user);
+  },
 };

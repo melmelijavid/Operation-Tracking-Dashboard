@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import ChatAssistant from '../components/ChatAssistant';
+import AppTopBar from '../components/AppTopBar';
 
 export function ProtectedRoute() {
   const { isAuthenticated, isBootstrapping } = useAuth();
@@ -12,6 +13,7 @@ export function ProtectedRoute() {
   }
   return (
     <>
+      <AppTopBar />
       <Outlet />
       <ChatAssistant />
     </>

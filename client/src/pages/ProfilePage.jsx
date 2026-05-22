@@ -25,7 +25,7 @@ function getInitials(name) {
 }
 
 export default function ProfilePage() {
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
@@ -55,6 +55,9 @@ export default function ProfilePage() {
   const fileInputRef = useRef(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  const [avatarNotice, setAvatarNotice] = useState('');
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+  const [pendingAvatarPreview, setPendingAvatarPreview] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -77,6 +80,20 @@ export default function ProfilePage() {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!pendingAvatarFile) {
+      setPendingAvatarPreview('');
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(pendingAvatarFile);
+    setPendingAvatarPreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [pendingAvatarFile]);
+
   async function handleSaveInfo(event) {
     event.preventDefault();
     setInfoError('');
@@ -96,6 +113,7 @@ export default function ProfilePage() {
         emailNotificationsEnabled: notify,
       });
       setProfile(updated);
+      updateUser(updated);
       setInfoNotice('Saved.');
     } catch (err) {
       setInfoError(err.message || 'Could not save changes.');
@@ -135,6 +153,7 @@ export default function ProfilePage() {
 
   async function handleAvatarPicked(event) {
     setAvatarError('');
+    setAvatarNotice('');
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
@@ -149,10 +168,22 @@ export default function ProfilePage() {
       return;
     }
 
+    setPendingAvatarFile(file);
+    setAvatarNotice('Photo selected. Press Save to keep it.');
+  }
+
+  async function handleSaveAvatar() {
+    if (!pendingAvatarFile) return;
+
+    setAvatarError('');
+    setAvatarNotice('');
     setUploadingAvatar(true);
     try {
-      const updated = await uploadMyAvatar(file);
+      const updated = await uploadMyAvatar(pendingAvatarFile);
       setProfile(updated);
+      updateUser(updated);
+      setPendingAvatarFile(null);
+      setAvatarNotice('Photo saved.');
     } catch (err) {
       setAvatarError(err.message || 'Could not upload avatar.');
     } finally {
@@ -162,12 +193,19 @@ export default function ProfilePage() {
 
   async function handleRemoveAvatar() {
     setAvatarError('');
+    setAvatarNotice('');
+    if (pendingAvatarFile) {
+      setPendingAvatarFile(null);
+      return;
+    }
+
     if (!window.confirm('Remove your profile picture?')) return;
 
     setUploadingAvatar(true);
     try {
       const updated = await deleteMyAvatar();
       setProfile(updated);
+      updateUser(updated);
     } catch (err) {
       setAvatarError(err.message || 'Could not remove avatar.');
     } finally {
@@ -233,8 +271,8 @@ export default function ProfilePage() {
 
         <section className="profile-card profile-summary">
           <div className="profile-avatar-wrap">
-            {profile.avatarUrl ? (
-              <img src={profile.avatarUrl} alt="" className="profile-avatar-img" />
+            {pendingAvatarPreview || profile.avatarUrl ? (
+              <img src={pendingAvatarPreview || profile.avatarUrl} alt="" className="profile-avatar-img" />
             ) : (
               <div className="profile-avatar" aria-hidden="true">{getInitials(profile.name)}</div>
             )}
@@ -279,17 +317,28 @@ export default function ProfilePage() {
             >
               {uploadingAvatar ? 'Uploading...' : (profile.avatarUrl ? 'Change photo' : 'Upload photo')}
             </button>
-            {profile.avatarUrl && (
+            {pendingAvatarFile && (
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleSaveAvatar}
+                disabled={uploadingAvatar}
+              >
+                Save
+              </button>
+            )}
+            {(profile.avatarUrl || pendingAvatarFile) && (
               <button
                 type="button"
                 className="btn-secondary btn-danger-outline"
                 onClick={handleRemoveAvatar}
                 disabled={uploadingAvatar}
               >
-                Remove
+                {pendingAvatarFile ? 'Cancel' : 'Remove'}
               </button>
             )}
             {avatarError && <p className="admin-error profile-avatar-error" role="alert">{avatarError}</p>}
+            {avatarNotice && <p className="admin-info profile-avatar-error" role="status">{avatarNotice}</p>}
           </div>
         </section>
 

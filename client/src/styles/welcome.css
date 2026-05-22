@@ -13,8 +13,8 @@
   color: #fff;
 
   background:
-    linear-gradient(135deg, rgba(143, 179, 255, 0.16), transparent 30%),
-    linear-gradient(to top, #020617, #1c3883);
+    radial-gradient(circle at 78% 14%, rgba(38, 70, 150, 0.2), transparent 30%),
+    linear-gradient(135deg, #020617 0%, #071225 48%, #13285f 100%);
 }
 .welcome-page::before {
   content: "";

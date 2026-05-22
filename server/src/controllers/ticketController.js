@@ -124,6 +124,23 @@ async function ensureSiteExists(siteId) {
   }
 }
 
+async function ensureAssignedUserBelongsToTeam(assignedPersonUserId, teamId) {
+  if (!assignedPersonUserId || !teamId) return;
+
+  const result = await query(
+    `SELECT 1
+     FROM team_members
+     WHERE user_id = $1 AND team_id = $2`,
+    [Number(assignedPersonUserId), Number(teamId)]
+  );
+
+  if (result.rowCount === 0) {
+    const err = new Error('Assigned user must belong to the selected team.');
+    err.status = 400;
+    throw err;
+  }
+}
+
 async function fetchAllTickets() {
   const result = await query(`${ticketSelect} ORDER BY t.submit_date DESC, t.id DESC`);
   return result.rows.map(mapTicketRow);
@@ -419,6 +436,7 @@ export async function createTicket(req, res) {
   }
 
   const team = await resolveTicketTeam({ teamId, assignedGroup });
+  await ensureAssignedUserBelongsToTeam(assignedPersonUserId, team.teamId);
   await ensureSiteExists(siteId);
 
   const closeDateValue = status === 'Closed' ? getTodayDate() : null;
@@ -568,6 +586,8 @@ export async function updateTicket(req, res) {
   const team = (req.body.teamId !== undefined || req.body.assignedGroup !== undefined)
     ? await resolveTicketTeam({ teamId: req.body.teamId, assignedGroup: req.body.assignedGroup })
     : { teamId: currentTicket.team_id, assignedGroup: currentTicket.assigned_group };
+
+  await ensureAssignedUserBelongsToTeam(req.body.assignedPersonUserId, team.teamId);
 
   await query(
     `UPDATE tickets

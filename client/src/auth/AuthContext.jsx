@@ -52,6 +52,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  function updateUser(nextUser) {
+    setUser((currentUser) => {
+      const mergedUser = { ...(currentUser || {}), ...(nextUser || {}) };
+      authService.cacheUser(mergedUser);
+      return mergedUser;
+    });
+  }
+
   const value = useMemo(
     () => ({
       user,
@@ -63,6 +71,7 @@ export function AuthProvider({ children }) {
       verifyEmail,
       resendVerification,
       logout,
+      updateUser,
     }),
     [user, isBootstrapping]
   );

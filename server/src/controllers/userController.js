@@ -2,9 +2,24 @@ import { query } from '../db.js';
 
 export async function getUsers(req, res) {
   const result = await query(
-    `SELECT id, name, email, role, TO_CHAR(created_at, 'YYYY-MM-DD') AS created_at
-     FROM users
-     ORDER BY name ASC`
+    `SELECT
+       u.id,
+       u.name,
+       u.email,
+       u.role,
+       TO_CHAR(u.created_at, 'YYYY-MM-DD') AS created_at,
+       COALESCE(
+         json_agg(
+           json_build_object('id', t.id, 'name', t.name)
+           ORDER BY t.name
+         ) FILTER (WHERE t.id IS NOT NULL),
+         '[]'::json
+       ) AS teams
+     FROM users u
+     LEFT JOIN team_members tm ON tm.user_id = u.id
+     LEFT JOIN teams t ON t.id = tm.team_id
+     GROUP BY u.id
+     ORDER BY u.name ASC`
   );
 
   return res.json(result.rows);

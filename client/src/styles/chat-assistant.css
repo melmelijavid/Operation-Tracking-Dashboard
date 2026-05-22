@@ -7,8 +7,8 @@
 }
 
 .chat-assistant-toggle {
-  width: 88px;
-  height: 88px;
+  width: 64px;
+  height: 64px;
   display: grid;
   place-items: center;
   overflow: hidden;

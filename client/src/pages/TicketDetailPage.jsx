@@ -113,6 +113,11 @@ function buildEditForm(ticket) {
   };
 }
 
+function userBelongsToTeam(availableUser, teamName) {
+  if (!teamName) return false;
+  return (availableUser.teams || []).some((team) => team.name === teamName);
+}
+
 function getHistoryText(entry) {
   if (entry.action === 'created') {
     return `Created ticket ${entry.newValue || entry.ticketId}`;
@@ -220,11 +225,26 @@ export default function TicketDetailPage() {
     role === AUTH_ROLES.ADMIN ||
     (role === AUTH_ROLES.OPERATOR && matchesCurrentUser(ticket.Owner, user))
   );
-  const assignableUsers = users.map((availableUser) => ({
-    id: String(availableUser.id),
-    name: availableUser.name,
-  }));
+  const assignableUsers = editForm
+    ? users
+      .filter((availableUser) => userBelongsToTeam(availableUser, editForm.assignedGroup))
+      .map((availableUser) => ({
+        id: String(availableUser.id),
+        name: availableUser.name,
+      }))
+    : [];
   const ticketSite = sites.find((site) => site.siteId === ticket?.siteId);
+
+  useEffect(() => {
+    if (!editOpen || !editForm?.assignedPersonUserId) return;
+    const selectedUserIsAssignable = assignableUsers.some((assignableUser) => (
+      assignableUser.id === String(editForm.assignedPersonUserId)
+    ));
+
+    if (!selectedUserIsAssignable) {
+      setEditForm((current) => ({ ...current, assignedPersonUserId: '' }));
+    }
+  }, [assignableUsers, editForm?.assignedPersonUserId, editOpen]);
 
   const mentionSuggestions = mentionSearch !== null
     ? users
@@ -693,7 +713,7 @@ export default function TicketDetailPage() {
               </select>
 
               <label htmlFor="detail-edit-team">Team</label>
-              <select id="detail-edit-team" required value={editForm.assignedGroup} onChange={(event) => setEditForm((current) => ({ ...current, assignedGroup: event.target.value }))}>
+              <select id="detail-edit-team" required value={editForm.assignedGroup} onChange={(event) => setEditForm((current) => ({ ...current, assignedGroup: event.target.value, assignedPersonUserId: '' }))}>
                 {!teams.some((team) => team.name === editForm.assignedGroup) && editForm.assignedGroup && (
                   <option value={editForm.assignedGroup}>{editForm.assignedGroup} (legacy)</option>
                 )}
@@ -748,11 +768,14 @@ export default function TicketDetailPage() {
 
               <label htmlFor="detail-edit-assigned-user">Assigned User</label>
               <select id="detail-edit-assigned-user" required value={editForm.assignedPersonUserId} onChange={(event) => setEditForm((current) => ({ ...current, assignedPersonUserId: event.target.value }))}>
-                <option value="">Select user</option>
+                <option value="">{editForm.assignedGroup ? 'Select user' : 'Select team first'}</option>
                 {assignableUsers.map((assignableUser) => (
                   <option key={assignableUser.id} value={assignableUser.id}>{assignableUser.name}</option>
                 ))}
               </select>
+              {editForm.assignedGroup && assignableUsers.length === 0 && (
+                <p className="modal-hint">No users belong to the selected team.</p>
+              )}
 
               <label htmlFor="detail-edit-owner">Owner</label>
               <input id="detail-edit-owner" type="text" value={ticket.Owner || ''} disabled />

@@ -133,6 +133,11 @@ function buildDefaultForm() {
   };
 }
 
+function userBelongsToTeam(availableUser, teamName) {
+  if (!teamName) return false;
+  return (availableUser.teams || []).some((team) => team.name === teamName);
+}
+
 export default function TicketManagementPage() {
   const { role, user, logout } = useAuth();
   const [allTickets, setAllTickets] = useState([]);
@@ -180,11 +185,22 @@ export default function TicketManagementPage() {
   const canEditMyTickets = canUseManagement && activeTab === 'my';
   const canUpdateAssignedTickets = canUseManagement && activeTab === 'assigned';
   const assignableUsers = useMemo(() => {
-    return users.map((availableUser) => ({
+    return users.filter((availableUser) => userBelongsToTeam(availableUser, formData.assignedGroup)).map((availableUser) => ({
       id: String(availableUser.id),
       name: availableUser.name,
     }));
-  }, [users]);
+  }, [formData.assignedGroup, users]);
+
+  useEffect(() => {
+    if (!modalMode || !formData.assignedPersonUserId) return;
+    const selectedUserIsAssignable = assignableUsers.some((assignableUser) => (
+      assignableUser.id === String(formData.assignedPersonUserId)
+    ));
+
+    if (!selectedUserIsAssignable) {
+      setFormData((current) => ({ ...current, assignedPersonUserId: '' }));
+    }
+  }, [assignableUsers, formData.assignedPersonUserId, modalMode]);
 
   const myTickets = useMemo(() => {
     if (!canUseManagement) return [];
@@ -601,7 +617,7 @@ export default function TicketManagementPage() {
                   id="ticket-group"
                   required
                   value={formData.assignedGroup}
-                  onChange={(e) => setFormData((current) => ({ ...current, assignedGroup: e.target.value }))}
+                  onChange={(e) => setFormData((current) => ({ ...current, assignedGroup: e.target.value, assignedPersonUserId: '' }))}
                 >
                   {!teams.some((t) => t.name === formData.assignedGroup) && formData.assignedGroup && (
                     <option value={formData.assignedGroup}>{formData.assignedGroup} (legacy)</option>
@@ -655,11 +671,14 @@ export default function TicketManagementPage() {
 
                 <label htmlFor="ticket-assigned">Assigned User</label>
                 <select id="ticket-assigned" required value={formData.assignedPersonUserId} onChange={(e) => setFormData((current) => ({ ...current, assignedPersonUserId: e.target.value }))}>
-                  <option value="">Select user</option>
+                  <option value="">{formData.assignedGroup ? 'Select user' : 'Select team first'}</option>
                   {assignableUsers.map((assignableUser) => (
                     <option key={assignableUser.id} value={assignableUser.id}>{assignableUser.name}</option>
                   ))}
                 </select>
+                {formData.assignedGroup && assignableUsers.length === 0 && (
+                  <p className="modal-hint">No users belong to the selected team.</p>
+                )}
               </>
             )}
 
