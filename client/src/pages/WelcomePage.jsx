@@ -48,6 +48,35 @@ export default function WelcomePage() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [seenNotificationIds, setSeenNotificationIds] = useState(() => loadSeenNotificationIds(user));
   const now = new Date();
+  const currentMonth = now.toLocaleString('default', {
+  month: 'long',
+});
+
+const currentYear = now.getFullYear();
+
+const currentDay = now.getDate();
+
+const firstDayOfMonth = new Date(
+  currentYear,
+  now.getMonth(),
+  1
+).getDay();
+
+const daysInMonth = new Date(
+  currentYear,
+  now.getMonth() + 1,
+  0
+).getDate();
+
+const calendarDays = [];
+
+for (let i = 0; i < firstDayOfMonth; i++) {
+  calendarDays.push(null);
+}
+
+for (let day = 1; day <= daysInMonth; day++) {
+  calendarDays.push(day);
+}
   const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const date = now.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -79,9 +108,18 @@ export default function WelcomePage() {
 
       setWeather({
         temp: Math.round(data.main.temp),
-        condition: data.weather[0].main,
-        icon: data.weather[0].icon,
-        city: data.name,
+
+  condition: data.weather[0].main,
+
+  icon: data.weather[0].icon,
+
+  city: data.name,
+
+  humidity: data.main.humidity,
+
+  wind: Math.round(data.wind.speed),
+
+  feelsLike: Math.round(data.main.feels_like),
       });
     } catch (err) {
       setWeatherError('Weather unavailable');
@@ -207,22 +245,119 @@ useEffect(() => {
         </div>
 
         <div className="center">
+          <div className="top-widgets">
+
+  <div className="weather-widget">
+  
+
+  <div className="weather-top">
+
+    <div className="weather-time">
+      <h2>{time}</h2>
+      <p>{date}</p>
+    </div>
+
+  </div>
+
+  <div className="weather-divider"></div>
+
+  <div className="weather-bottom">
+
+    <div className="weather-left">
+      {weather && (
+        <img
+          src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
+          alt={weather.condition}
+        />
+      )}
+    </div>
+
+    <div className="weather-center">
+
+      <p className="city-name">
+        {weather?.city}
+      </p>
+
+      <h1>{weather?.temp}°C</h1>
+
+      <span>{weather?.condition}</span>
+
+    </div>
+
+    <div className="weather-right">
+
+      <div>
+        <p>Humidity</p>
+        <strong>{weather?.humidity}%</strong>
+      </div>
+
+      <div>
+        <p>Wind</p>
+        <strong>{weather?.wind} km/h</strong>
+      </div>
+
+      <div>
+        <p>Feels Like</p>
+        <strong>{weather?.feelsLike}°C</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+  
+  <div className="calendar-widget">
+
+
+  <div className="calendar-header">
+    <button>{'<'}</button>
+
+    <h3>
+      {currentMonth} {currentYear}
+    </h3>
+
+    <button>{'>'}</button>
+  </div>
+
+  <div className="calendar-days">
+    <span>Su</span>
+    <span>Mo</span>
+    <span>Tu</span>
+    <span>We</span>
+    <span>Th</span>
+    <span>Fr</span>
+    <span>Sa</span>
+  </div>
+
+  <div className="calendar-dates">
+
+    {calendarDays.map((day, index) => (
+      <span
+        key={index}
+        className={
+          day === currentDay
+            ? 'active-date'
+            : ''
+        }
+      >
+        {day || ''}
+      </span>
+    ))}
+
+  </div>
+
+</div>
+</div>
+
+
+
+
+
           
 
-          <div className="time-pill">
-            <span>{time}</span>
-            <span>{date}</span>
-            <span className="weather-pill">
-  {weather && (
-    <>
-      <img
-        src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
-        alt={weather.condition}
-      />
-      {weather.temp}°C
-    </>
-  )}</span>
-          </div>
+          
 
           <div className="quick-links">
             <h3>Quick Links</h3>
