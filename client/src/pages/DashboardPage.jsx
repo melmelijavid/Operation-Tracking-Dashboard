@@ -324,7 +324,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <label className="toolbar-search" htmlFor="toolbarSearch">
-                <span>Search</span>
+                
                 <input id="toolbarSearch" type="text" placeholder="Search by ID or description" value={filters.search} onChange={(e)=>updateFilter('search', e.target.value)} />
               </label>
               <div className="btn-container"><button className="btn btn-export" type="button">Import</button><button className="btn btn-export" type="button">Export</button></div>

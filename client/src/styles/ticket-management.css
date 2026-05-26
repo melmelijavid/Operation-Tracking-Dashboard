@@ -307,9 +307,9 @@
 .primary-button,
 .secondary-button {
   border: 0;
-  border-radius: 8px;
+  border-radius: 20px;
   cursor: pointer;
-  font-weight: 800;
+  font-weight: 600;
   transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
