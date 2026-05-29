@@ -47,7 +47,7 @@ body {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   position: sticky;
-overflow: hidden;
+  overflow: visible;
 }
 .app-topbar::before {
 
@@ -65,6 +65,12 @@ overflow: hidden;
     );
 
   pointer-events: none;
+  z-index: 0;
+}
+
+.app-topbar > * {
+  position: relative;
+  z-index: 1;
 }
 
 .app-topbar-brand {
