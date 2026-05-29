@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../auth';
 import { fetchMentionNotifications } from '../utils/users';
+import DirectMessages from './DirectMessages';
 
 function getNotificationSeenKey(user) {
   return `operation-dashboard-seen-mentions-${user?.id || user?.email || 'guest'}`;
@@ -113,6 +114,8 @@ export default function AppTopBar() {
               <span className="app-notification-badge">{unseenNotifications.length}</span>
             )}
           </button>
+
+          <DirectMessages />
 
           <Link to="/profile" className="app-topbar-icon" aria-label="Settings">
             <svg viewBox="0 0 24 24" aria-hidden="true">
