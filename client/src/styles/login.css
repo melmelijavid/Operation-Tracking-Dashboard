@@ -482,3 +482,58 @@
   top: -10px !important;
   left: 15px !important;
 }
+.login-page .login-btn {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+}
+.login-page .login-btn {
+  position: relative;
+
+  overflow: hidden;
+
+  isolation: isolate;
+}
+.login-page .login-btn::before {
+  content: "";
+
+  position: absolute;
+
+  top: -40%;
+  left: -35%;
+
+  width: 60%;
+  height: 180%;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(169, 199, 236, 0.9),
+      transparent
+    );
+
+  filter: blur(10px);
+
+  transform: rotate(12deg);
+
+  animation:
+    loginSweep 5s ease-in-out infinite;
+
+  opacity: 0.9;
+
+  pointer-events: none;
+}
+@keyframes loginSweep {
+
+  0% {
+    left: -45%;
+  }
+
+  100% {
+    left: 140%;
+  }
+
+}

@@ -350,7 +350,7 @@ useEffect(() => {
 
   <div className="support-row">
     <i className="support-dot" aria-hidden="true"></i>
-    <span>melika.javidfar@euvt.com</span>
+    <span>melika.javidfar11@e-uvt.ro</span>
   </div>
 
   <div className="chatbot">

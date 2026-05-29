@@ -7,8 +7,9 @@
   min-height: 100vh;
   margin: 0;
   background:
-    linear-gradient(135deg, rgba(143, 179, 255, 0.16), transparent 30%),
-    linear-gradient(to top, #020617, #1c3883);
+    
+    linear-gradient(135deg, rgba(8, 22, 51, 0.16), transparent 30%),
+    linear-gradient(to top, #020617, #142246);
   color: #f7f7f2;
   padding: 20px;
 }
@@ -218,7 +219,7 @@
   color: #ffffff;
   font-size: 42px;
   line-height: 1.04;
-  font-weight: 850;
+  font-weight: 650;
   letter-spacing: 0;
 }
 
@@ -277,7 +278,7 @@
 .statistics-tab {
   min-height: 44px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 10px 20px;
   color: #f7f7f2;
   background: rgba(255, 255, 255, 0.08);

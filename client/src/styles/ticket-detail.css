@@ -11,8 +11,8 @@
 
   background:
   radial-gradient(circle at top right, rgba(79, 145, 255, 0.07), transparent 24%),
-    linear-gradient(135deg, rgba(143, 179, 255, 0.10), transparent 30%),
-    linear-gradient(to top, #020617, #1c3883);
+    linear-gradient(135deg, rgba(8, 22, 51, 0.16), transparent 30%),
+    linear-gradient(to top, #020617, #142246);
 
   position: relative;
   overflow: hidden;
@@ -185,7 +185,7 @@
       #2d66df
     );
 
-  font-weight: 700;
+  font-weight: 700px;
 
   cursor: pointer;
 
@@ -965,11 +965,12 @@
   position: absolute;
 
   left: 50%;
-  bottom: 0;
+ bottom: 0;
+
 
   transform: translateX(-50%);
 
-  width: 48%;
+ width: 140px;
 
   height: 1px;
 
@@ -982,26 +983,7 @@
     );
 }
 
-.ticket-detail-kicker::before {
-  content: "";
 
-  position: absolute;
-
-  left: 50%;
-  bottom: -4px;
-
-  transform: translateX(-50%);
-
-  width: 8px;
-  height: 8px;
-
-  border-radius: 50%;
-
-  background: #6ea8ff;
-
-  box-shadow:
-    0 0 16px rgba(110,168,255,0.8);
-}
 
 .ticket-detail-hero h1 {
   margin-bottom: 10px;
@@ -1034,4 +1016,11 @@
   flex-wrap: wrap;
 
   width: 100%;
+}
+.ownership-panel .detail-definition-grid div {
+  min-height: 72px;
+
+  padding: 12px 14px;
+
+  border-radius: 14px;
 }

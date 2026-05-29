@@ -89,13 +89,13 @@ export default function AppTopBar() {
           Operation Dashboard
         </Link>
 
-        <nav className="app-topbar-nav" aria-label="Global navigation">
+        {/*<nav className="app-topbar-nav" aria-label="Global navigation">
           <NavLink to="/welcome">Welcome</NavLink>
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/tickets">Tickets</NavLink>
           <NavLink to="/statistics">Analytics</NavLink>
           {role === 'admin' && <NavLink to="/admin">Admin</NavLink>}
-        </nav>
+        </nav>*/}
 
         <div className="app-topbar-actions">
           <button
