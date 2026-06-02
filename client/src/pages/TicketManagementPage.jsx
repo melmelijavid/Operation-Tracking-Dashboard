@@ -14,6 +14,12 @@ function normalizeValue(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function toTitleCase(value) {
+  return String(value || '-')
+    .toLowerCase()
+    .replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+}
+
 function getUserKeys(user) {
   if (!user) return [];
 
@@ -49,14 +55,20 @@ function getStatusClass(status) {
 }
 
 function getTicketCardClass(ticket) {
+  const classes = ['ticket-card'];
+
   if (ticket.status === 'Resolved' || ticket.status === 'Closed') {
     return 'ticket-card completed';
   }
 
-  if (ticket.slaUrgency === 'warning') return 'ticket-card sla-warning';
-  if (ticket.slaUrgency === 'danger') return 'ticket-card sla-danger';
-  if (ticket.slaUrgency === 'overdue') return 'ticket-card sla-overdue';
-  return 'ticket-card';
+  if (ticket.slaUrgency === 'warning') classes.push('sla-warning');
+  if (ticket.slaUrgency === 'danger') classes.push('sla-danger');
+  if (ticket.slaUrgency === 'overdue') classes.push('sla-overdue');
+  if (ticket.priority === 'Critical' && ticket.slaUrgency !== 'overdue') {
+    classes.push('priority-critical');
+  }
+
+  return classes.join(' ');
 }
 
 function isCompletedTicket(ticket) {
@@ -509,7 +521,7 @@ export default function TicketManagementPage() {
                     <div className="ticket-card-top">
                       <div>
                         <p className="ticket-card-label">{ticket.id}</p>
-                        <h3><Link to={`/tickets/${encodeURIComponent(ticket.id)}`}>{ticket.serviceType}</Link></h3>
+                        <h3><Link to={`/tickets/${encodeURIComponent(ticket.id)}`}>{toTitleCase(ticket.serviceType)}</Link></h3>
                         <span className={`ticket-sla-pill ${ticket.slaUrgency || 'none'}`}>
                           SLA: {ticket.slaRemainingLabel || '-'}
                         </span>

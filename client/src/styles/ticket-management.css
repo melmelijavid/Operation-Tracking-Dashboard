@@ -339,25 +339,19 @@
 
 .ticket-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
-  gap: 18px;
-  justify-content: start;
- 
-  grid-template-columns:
-    repeat(auto-fit, minmax(360px, 430px));
-
-  gap: 22px;
-
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  justify-content: stretch;
 }
 
 .ticket-card {
   border-radius: 8px;
   
-  min-height: 300px;
+  min-height: 270px;
   display: flex;
   border-radius: 22px;
-padding: 22px;
-gap: 18px;
+  padding: 18px;
+  gap: 14px;
   flex-direction: column;
   
   border: 1px solid rgba(143, 179, 255, 0.2);
@@ -420,10 +414,15 @@ gap: 18px;
 }
 
 .ticket-card.sla-danger {
-   border-color: rgba(255, 77, 90, 0.14);
+  animation: ticket-danger-border 1.8s ease-in-out infinite;
+  border-color: rgba(255, 77, 90, 0.14);
 
   box-shadow:
     0 10px 30px rgba(0,0,0,0.32);
+}
+
+.ticket-card.priority-critical {
+  animation: ticket-danger-border 1.8s ease-in-out infinite;
 }
 
 .ticket-card.sla-overdue {
@@ -452,7 +451,7 @@ gap: 18px;
   color: #8fb3ff;
   font-size: 12px;
   font-weight: 800;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .ticket-card h3 {
@@ -636,7 +635,7 @@ gap: 18px;
 
   letter-spacing: 1.2px;
 
-  text-transform: uppercase;
+  text-transform: none;
 
   opacity: 0.8;
 }
@@ -865,6 +864,10 @@ gap: 18px;
 @media (max-width: 1120px) {
   .ticket-shell {
     grid-template-columns: 1fr;
+  }
+
+  .ticket-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ticket-sidebar {

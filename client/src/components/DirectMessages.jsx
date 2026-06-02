@@ -193,7 +193,7 @@ export default function DirectMessages() {
       }
     }
 
-    const intervalId = window.setInterval(refreshDirectMessages, 10000);
+    const intervalId = window.setInterval(refreshDirectMessages, 5000);
 
     return () => {
       isMounted = false;
