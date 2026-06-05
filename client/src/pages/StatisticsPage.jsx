@@ -6,7 +6,13 @@ import { fetchTickets } from '../utils/tickets';
 import { fetchSitesWithTicketSummary } from '../utils/sites';
 import { ServiceTypeChart, SLAPerformanceChart, StackedBarTrendChart, TeamPerformanceChart } from '../components/Charts';
 import SiteMap from '../components/SiteMap';
-
+import {
+  FiHome,
+  FiFileText,
+  FiGrid,
+  FiClipboard,
+  FiBarChart2
+} from "react-icons/fi";
 const MAP_STATUS_OPTIONS = ['Open', 'In Progress', 'Pending', 'Resolved', 'Closed'];
 const MAP_SLA_OPTIONS = [
   { value: 'overdue', label: 'Overdue' },
@@ -521,12 +527,31 @@ export default function StatisticsPage() {
           </div>
 
           <nav className="statistics-nav" aria-label="Main navigation">
-            <NavLink to="/" end>Home</NavLink>
-            <NavLink to="/welcome">Welcome</NavLink>
-            <NavLink to="/dashboard">Dashboard</NavLink>
-            <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Analytics</NavLink>
-          </nav>
+             <NavLink to="/" end>
+    <FiHome />
+    <span>Home</span>
+  </NavLink>
+
+  <NavLink to="/welcome">
+    <FiFileText />
+    <span>Welcome</span>
+  </NavLink>
+
+  <NavLink to="/dashboard">
+    <FiGrid />
+    <span>Dashboard</span>
+  </NavLink>
+
+  <NavLink to="/tickets">
+    <FiClipboard />
+    <span>Ticket Management</span>
+  </NavLink>
+
+  <NavLink to="/statistics">
+    <FiBarChart2 />
+    <span>Analytics</span>
+  </NavLink>
+</nav>
 
           <div className="statistics-sidebar-status">
             <span className="statistics-dot"></span>

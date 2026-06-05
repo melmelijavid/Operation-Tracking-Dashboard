@@ -5,7 +5,14 @@ import { useAuth } from '../auth';
 import { fetchTickets, getDashboardTicketsForRole } from '../utils/tickets';
 import { fetchTeams } from '../utils/teams';
 import PaginationButtons from '../components/PaginationButtons';
-
+import {
+  FiHome,
+  FiGrid,
+  FiClipboard,
+  FiBarChart2,
+  FiFileText,
+   FiUser
+} from "react-icons/fi";
 const TICKETS_PER_PAGE = 20;
 const DEFAULT_FILTERS = {
   search: '',
@@ -241,12 +248,30 @@ export default function DashboardPage() {
           </div>
 
           <nav className="dashboard-nav" aria-label="Dashboard navigation">
-            <NavLink to="/" end>Home</NavLink>
-            <NavLink to="/welcome">Welcome</NavLink>
-            <NavLink to="/dashboard">Dashboard</NavLink>
-            <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Analytics</NavLink>
-          </nav>
+            <NavLink to="/" end>
+    <FiHome />
+    <span>Home</span>
+  </NavLink>
+
+              <NavLink to="/welcome">
+    <FiUser />
+    <span>Welcome</span>
+  </NavLink>
+
+            <NavLink to="/dashboard">
+    <FiGrid />
+    <span>Dashboard</span>
+  </NavLink>
+  
+             <NavLink to="/tickets">
+    <FiClipboard />
+    <span>Ticket Management</span>
+  </NavLink>
+             <NavLink to="/statistics">
+    <FiBarChart2 />
+    <span>Analytics</span>
+  </NavLink>
+</nav>
 
           <div className="sidebar-status">
             <span className="status-light"></span>

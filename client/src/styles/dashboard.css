@@ -1763,3 +1763,12 @@ tbody td {
   border: 1px dashed rgba(255, 255, 255, 0.1);
   border-radius: 8px;
 }
+.dashboard-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.dashboard-nav a svg {
+  font-size: 18px;
+  color: #8fb3ff;
+}

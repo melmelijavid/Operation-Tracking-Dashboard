@@ -483,3 +483,17 @@
     flex-direction: row;
   }
 }
+.statistics-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.statistics-nav a svg {
+  font-size: 18px;
+  color: #8fb3ff;
+  min-width: 18px;
+}
+.statistics-nav a:hover svg,
+.statistics-nav a.active svg {
+  color: #ffffff;
+}

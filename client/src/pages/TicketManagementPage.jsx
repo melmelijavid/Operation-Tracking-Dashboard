@@ -7,6 +7,15 @@ import { fetchUsers } from '../utils/users';
 import { fetchTeams } from '../utils/teams';
 import { fetchSites } from '../utils/sites';
 import PaginationButtons from '../components/PaginationButtons';
+import {
+  FiHome,
+  FiGrid,
+  FiClipboard,
+  FiBarChart2,
+  FiFileText,
+   FiUser,
+   FiUsers
+} from "react-icons/fi";
 
 const TICKETS_PER_PAGE = 6;
 
@@ -433,21 +442,47 @@ export default function TicketManagementPage() {
           </div>
 
           <nav className="sidebar-links" aria-label="Primary navigation">
-            <NavLink to="/" end>Home</NavLink>
-            <NavLink to="/dashboard">Dashboard</NavLink>
-            <NavLink to="/tickets">Ticket Management</NavLink>
-            <NavLink to="/statistics">Analytics</NavLink>
+            <NavLink to="/" end>
+    <FiHome />
+    <span>Home</span>
+  </NavLink>
+
+  <NavLink to="/dashboard">
+    <FiGrid />
+    <span>Dashboard</span>
+  </NavLink>
+
+  <NavLink to="/tickets">
+    <FiClipboard />
+    <span>Ticket Management</span>
+  </NavLink>
+
+  <NavLink to="/statistics">
+    <FiBarChart2 />
+    <span>Analytics</span>
+  </NavLink>
+
           </nav>
 
           <div className="sidebar-divider"></div>
 
           <div className="sidebar-modes" aria-label="Ticket sections">
-            <button type="button" className={activeTab === 'my' ? 'mode-button active' : 'mode-button'} onClick={() => switchTab('my')}>
-              My Tickets
-            </button>
-            <button type="button" className={activeTab === 'assigned' ? 'mode-button active' : 'mode-button'} onClick={() => switchTab('assigned')}>
-              Assigned Tickets
-            </button>
+            <button
+  type="button"
+  className={activeTab === 'my' ? 'mode-button active' : 'mode-button'}
+  onClick={() => switchTab('my')}
+>
+  <FiUser />
+  <span>My Tickets</span>
+</button>
+            <button
+  type="button"
+  className={activeTab === 'assigned' ? 'mode-button active' : 'mode-button'}
+  onClick={() => switchTab('assigned')}
+>
+  <FiUsers />
+  <span>Assigned Tickets</span>
+</button>
           </div>
 
           <button type="button" className="logout-button" onClick={logout}>Log-out</button>

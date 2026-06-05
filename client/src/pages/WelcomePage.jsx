@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import {  useEffect, useMemo, useState} from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth';
 import '../styles/welcome.css';
@@ -25,6 +25,7 @@ export default function WelcomePage() {
   const [weatherError, setWeatherError] = useState('');
   const [holidays, setHolidays] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const now = new Date();
   const [displayedMonthDate, setDisplayedMonthDate] = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
   const currentMonth = displayedMonthDate.toLocaleString('default', {
@@ -99,12 +100,15 @@ for (let day = 1; day <= daysInMonth; day++) {
 useEffect(() => {
   async function loadRecentActivity() {
     try {
-      const tickets = await fetchTickets();
+      const ticketData = await fetchTickets();
 
-      const userTickets = tickets
-        .filter((ticket) =>
-          ticket.Owner?.toLowerCase() === user?.name?.toLowerCase()
-        )
+setTickets(ticketData);
+
+const userTickets = ticketData
+  .filter((ticket) =>
+    ticket.Owner?.toLowerCase() === user?.name?.toLowerCase()
+  )
+
         .sort(
           (a, b) =>
             new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate)
@@ -191,7 +195,32 @@ useEffect(() => {
 
     return classNames.join(' ');
   }
+const topActiveTickets = useMemo(() => {
+  function getScore(ticket) {
+    let score = 0;
 
+    if (ticket.priority === 'Critical') score += 50;
+    else if (ticket.priority === 'High') score += 30;
+    else if (ticket.priority === 'Medium') score += 15;
+
+    if (ticket.slaUrgency === 'overdue') score += 50;
+    else if (ticket.slaUrgency === 'danger') score += 35;
+    else if (ticket.slaUrgency === 'warning') score += 20;
+
+    score += Math.min(ticket.aging || 0, 30);
+
+    return score;
+  }
+
+  return [...tickets]
+    .filter(
+      (ticket) =>
+        ticket.status !== 'Resolved' &&
+        ticket.status !== 'Closed'
+    )
+    .sort((a, b) => getScore(b) - getScore(a))
+    .slice(0, 3);
+}, [tickets]);
   const weatherWidget = (
     <div className="weather-widget">
       <div className="weather-top">
@@ -367,11 +396,30 @@ useEffect(() => {
           {calendarWidget}
 
           <div className="card-box">
-            <h3>System Logs</h3>
-            <p>- All systems operational</p>
-            <p>- No issues detected</p>
-            <p>- Performance stable</p>
-          </div>
+  <h3>Top Active Tickets</h3>
+
+  {topActiveTickets.length === 0 ? (
+    <p>No active incidents</p>
+  ) : (
+    topActiveTickets.map((ticket) => (
+      <Link
+        key={ticket.id}
+        to={`/tickets/${encodeURIComponent(ticket.id)}`}
+        className="top-ticket-item"
+      >
+        <strong>{ticket.id}</strong>
+
+        <span>
+          {ticket.description?.slice(0, 45) || "Incident"}
+        </span>
+
+        <small>
+          {ticket.priority} • {ticket.status}
+        </small>
+      </Link>
+    ))
+  )}
+</div>
 
           <div className="card-box">
             <h3>Recent Activity</h3>

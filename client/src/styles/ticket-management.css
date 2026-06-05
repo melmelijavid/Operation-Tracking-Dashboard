@@ -972,3 +972,32 @@
 
   line-height: 1.5;
 }
+.sidebar-links a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-links a svg {
+  font-size: 18px;
+  color: #8fb3ff;
+}
+
+.sidebar-links a:hover svg,
+.sidebar-links a.active svg {
+  color: #fff;
+}
+.mode-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mode-button svg {
+  font-size: 18px;
+  color: #8fb3ff;
+}
+
+.mode-button.active svg {
+  color: #fff;
+}
