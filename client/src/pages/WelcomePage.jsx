@@ -3,6 +3,12 @@ import { Link ,useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth';
 import '../styles/welcome.css';
 import { fetchTickets } from '../utils/tickets';
+import {
+ FiCheck,
+ FiAlertTriangle,
+ FiClock,
+ FiPlus
+} from "react-icons/fi";
 
 function QuickCard({ to, icon, label, className = '' }) {
   const content = (
@@ -122,17 +128,70 @@ const userTickets = ticketData
         .slice(0, 3);
 
       const activities = userTickets.map((ticket) => ({
-        id: ticket.id,
-        text: `Created ${ticket.id} (${ticket.priority})`,
-      }));
 
-      setRecentActivity([
-        {
-          id: 'login',
-          text: 'Logged in recently',
-        },
-        ...activities,
-      ]);
+  id: ticket.id,
+
+  time: new Date(ticket.lastModifiedDate)
+    .toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+
+  title:
+ticket.status === "Open"
+? `Ticket ${ticket.id} was opened`
+
+: ticket.status === "Pending"
+? `Ticket ${ticket.id} is pending`
+
+: ticket.status === "Resolved"
+? `Ticket ${ticket.id} was resolved`
+
+: `Ticket ${ticket.id} was updated`,
+
+description:
+
+`Assigned to ${ticket.Assigned_Person}`,
+
+  type: ticket.status.toLowerCase(),
+
+  label: ticket.status.toUpperCase(),
+  iconColor:
+
+ticket.status === "Resolved"
+? "green"
+
+: ticket.slaUrgency === "overdue"
+? "orange"
+
+: ticket.status === "Pending"
+? "yellow"
+
+: "blue",
+
+}));
+
+setRecentActivity([
+
+  {
+
+    id: 'login',
+
+    time: time,
+
+    title: 'User logged in',
+
+    description: `${user.name} entered the dashboard`,
+
+    type: 'login',
+
+    label: 'LOGIN',
+
+  },
+
+  ...activities,
+
+]);
     } catch (err) {
       setRecentActivity([]);
     }
@@ -436,6 +495,66 @@ const topActiveTickets = useMemo(() => {
     </tbody>
   </table>
 </div>
+<div className="activity-timeline">
+
+<h3>Recent Activity Timeline</h3>
+
+{recentActivity.map((activity)=>(
+
+<div
+key={activity.id}
+
+className="timeline-item"
+>
+
+<div className={`timeline-icon ${activity.iconColor}`}>
+
+{activity.type === "resolved"
+
+? <FiCheck/>
+
+: activity.type === "pending"
+
+? <FiClock/>
+
+: activity.iconColor === "orange"
+
+? <FiAlertTriangle/>
+
+: <FiPlus/>}
+
+</div>
+
+<div className="timeline-time">
+{activity.time}
+</div>
+
+<div className="timeline-content">
+
+<h4>{activity.title}</h4>
+
+<p>{activity.description}</p>
+
+</div>
+
+<span className={`timeline-badge ${activity.type}`}>
+
+{activity.label}
+
+</span>
+
+</div>
+
+))}
+
+<Link
+  to="/tickets"
+  className="timeline-footer"
+>
+  View Full Timeline →
+</Link>
+
+</div>
 
           <div className="support">
              <h3>24/7 Support</h3>
@@ -471,14 +590,7 @@ const topActiveTickets = useMemo(() => {
           {calendarWidget}
 
           
-          <div className="card-box">
-            <h3>Recent Activity</h3>
-            {recentActivity.map((activity) => (
-              <p key={activity.id}>
-                • {activity.text}</p>
-              ))}
-            
-          </div>
+         
 
         </div>
       </div>
